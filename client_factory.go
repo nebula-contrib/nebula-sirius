@@ -13,15 +13,26 @@ import (
 	"net"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 type NebulaClientFactory struct {
-	Conf *NebulaClientConfig
+	conf *NebulaClientConfig
+	log  Logger
+}
+
+func InitNebulaClientFactoryWithDefaultLogger(conf *NebulaClientConfig) *NebulaClientFactory {
+	return NewNebulaClientFactory(conf, DefaultLogger{})
+}
+
+func NewNebulaClientFactory(conf *NebulaClientConfig, log Logger) *NebulaClientFactory {
+	return &NebulaClientFactory{
+		conf: conf,
+		log:  log,
+	}
 }
 
 func (f *NebulaClientFactory) MakeObject(ctx context.Context) (*pool.PooledObject, error) {
-	c, err := createWrappedNebulaClient(ctx, f.Conf)
+	c, err := f.createWrappedNebulaClient(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -47,11 +58,15 @@ func (f *NebulaClientFactory) ActivateObject(ctx context.Context, object *pool.P
 	client := object.Object.(*WrappedNebulaClient)
 
 	if !client.GetTransport().IsOpen() {
+		f.log.Debug(fmt.Sprintf("client was not open, going to open transport before activated..."))
 		err := client.GetTransport().Open()
 		if err != nil {
+			f.log.Error(fmt.Sprintf("%v", err))
 			return err
 		}
+		f.log.Debug(fmt.Sprintf("client is opened transport, activated succesfully"))
 	}
+
 	return client.verifyClientVersion(ctx)
 }
 
@@ -68,7 +83,11 @@ func (f *NebulaClientFactory) PassivateObject(ctx context.Context, object *pool.
 }
 
 // create socket based transport
-func prepareTransportAndProtocolFactory(hostAddress HostAddress, timeout time.Duration, sslConfig *tls.Config) (thrift.TTransport, thrift.TProtocolFactory, error) {
+func (f *NebulaClientFactory) prepareTransportAndProtocolFactory(ctx context.Context) (thrift.TTransport, thrift.TProtocolFactory, error) {
+	hostAddress := f.conf.HostAddress
+	timeout := f.conf.Timeout
+	sslConfig := f.conf.SslConfig
+
 	newAdd := net.JoinHostPort(hostAddress.Host, strconv.Itoa(hostAddress.Port))
 
 	var transport thrift.TTransport
@@ -108,7 +127,10 @@ func prepareTransportAndProtocolFactory(hostAddress HostAddress, timeout time.Du
 	return transport, pf, nil
 }
 
-func getTransportAndProtocolFactoryForHttp2(hostAddress HostAddress, sslConfig *tls.Config, httpHeader http.Header) (thrift.TTransport, thrift.TProtocolFactory, error) {
+func (f *NebulaClientFactory) getTransportAndProtocolFactoryForHttp2(ctx context.Context) (thrift.TTransport, thrift.TProtocolFactory, error) {
+	hostAddress := f.conf.HostAddress
+	sslConfig := f.conf.SslConfig
+	httpHeader := f.conf.HttpHeader
 
 	newAdd := net.JoinHostPort(hostAddress.Host, strconv.Itoa(hostAddress.Port))
 	var (
@@ -171,21 +193,22 @@ func getTransportAndProtocolFactoryForHttp2(hostAddress HostAddress, sslConfig *
 }
 
 // Factory function to create new Thrift client
-func createWrappedNebulaClient(ctx context.Context, connCfgPool *NebulaClientConfig) (interface{}, error) {
+func (f *NebulaClientFactory) createWrappedNebulaClient(ctx context.Context) (interface{}, error) {
 	var (
 		err       error
 		transport thrift.TTransport
 		pf        thrift.TProtocolFactory
 	)
 
-	if connCfgPool.UseHTTP2 {
+	if f.conf.UseHTTP2 {
 		transport, pf, err =
-			getTransportAndProtocolFactoryForHttp2(connCfgPool.HostAddress, connCfgPool.SslConfig, connCfgPool.HttpHeader)
+			f.getTransportAndProtocolFactoryForHttp2(ctx)
 	} else {
-		transport, pf, err = prepareTransportAndProtocolFactory(connCfgPool.HostAddress, connCfgPool.Timeout, connCfgPool.SslConfig)
+		transport, pf, err = f.prepareTransportAndProtocolFactory(ctx)
 	}
 
 	if err != nil {
+		f.log.Error(fmt.Sprintf("%v", err))
 		return nil, err
 	}
 
@@ -193,5 +216,5 @@ func createWrappedNebulaClient(ctx context.Context, connCfgPool *NebulaClientCon
 	metaClient := meta.NewMetaServiceClientFactory(transport, pf)
 	storageClient := storage.NewGraphStorageServiceClientFactory(transport, pf)
 
-	return newWrappedNebulaClient(graphClient, storageClient, metaClient, transport), nil
+	return newWrappedNebulaClient(graphClient, storageClient, metaClient, transport, f.log), nil
 }

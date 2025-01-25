@@ -1,6 +1,3 @@
-## Working sample nebula go sdk
-
-```go
 package main
 
 import (
@@ -84,6 +81,3 @@ func main() {
 	log.Println(nebula_go_sdk.GenResultSet(a1))
 
 }
-
-
-```

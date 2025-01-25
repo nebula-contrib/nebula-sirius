@@ -38,6 +38,7 @@ type WrappedNebulaClient struct {
 	storageClient *storage.GraphStorageServiceClient
 	transport     thrift.TTransport
 	clientCfg     NebulaClientConfig
+	log           Logger
 }
 
 func newWrappedNebulaClient(
@@ -45,12 +46,14 @@ func newWrappedNebulaClient(
 	storageClient *storage.GraphStorageServiceClient,
 	metaClient *meta.MetaServiceClient,
 	transport thrift.TTransport,
+	log Logger,
 ) *WrappedNebulaClient {
 	return &WrappedNebulaClient{
 		graphClient:   graphClient,
 		metaClient:    metaClient,
 		storageClient: storageClient,
 		transport:     transport,
+		log:           log,
 	}
 }
 
@@ -61,51 +64,62 @@ func (c *WrappedNebulaClient) verifyClientVersion(ctx context.Context) error {
 	}
 	resp, err := c.graphClient.VerifyClientVersion(ctx, req)
 	if err != nil {
+		c.log.Error(fmt.Sprintf("error: %v", err))
 		defer c.transport.Close()
 		return err
 	}
 
 	if resp.GetErrorCode() != nebula.ErrorCode_SUCCEEDED {
+		c.log.Error(fmt.Sprintf("incompatible handshakeKey between client and server: %s", string(resp.GetErrorMsg())))
 		return fmt.Errorf("incompatible handshakeKey between client and server: %s", string(resp.GetErrorMsg()))
 	}
 	return nil
 }
 
-func (r *WrappedNebulaClient) Close() error {
-	return r.transport.Close()
+func (wc *WrappedNebulaClient) Close() error {
+	return wc.transport.Close()
 }
 
-func (r *WrappedNebulaClient) GetTransport() thrift.TTransport {
-	return r.transport
+func (wc *WrappedNebulaClient) GetTransport() thrift.TTransport {
+	return wc.transport
 }
 
-func (r *WrappedNebulaClient) GraphClient() (*graph.GraphServiceClient, error) {
-	if !r.transport.IsOpen() {
-		err := r.transport.Open()
-		if err != nil {
-			return nil, err
-		}
+func (wc *WrappedNebulaClient) GraphClient() (*graph.GraphServiceClient, error) {
+	if err := wc.openTransportIfNeeded(); err != nil {
+		wc.log.Error(fmt.Sprintf("%v", err))
+		return nil, err
 	}
-	return r.graphClient, nil
+
+	wc.log.Debug(fmt.Sprintf("client opened transport"))
+	return wc.graphClient, nil
 }
 
-func (r *WrappedNebulaClient) MetaClient() (*meta.MetaServiceClient, error) {
-	if !r.transport.IsOpen() {
-		err := r.transport.Open()
-		if err != nil {
-			return nil, err
-		}
+func (wc *WrappedNebulaClient) MetaClient() (*meta.MetaServiceClient, error) {
+	if err := wc.openTransportIfNeeded(); err != nil {
+		wc.log.Error(fmt.Sprintf("%v", err))
+		return nil, err
 	}
-	return r.metaClient, nil
 
+	wc.log.Debug(fmt.Sprintf("client opened transport"))
+	return wc.metaClient, nil
 }
 
-func (r *WrappedNebulaClient) StorageClient() (*storage.GraphStorageServiceClient, error) {
-	if !r.transport.IsOpen() {
-		err := r.transport.Open()
-		if err != nil {
-			return nil, err
-		}
+func (wc *WrappedNebulaClient) StorageClient() (*storage.GraphStorageServiceClient, error) {
+	if err := wc.openTransportIfNeeded(); err != nil {
+		wc.log.Error(fmt.Sprintf("%v", err))
+		return nil, err
 	}
-	return r.storageClient, nil
+
+	wc.log.Debug(fmt.Sprintf("client opened transport"))
+	return wc.storageClient, nil
+}
+
+func (wc *WrappedNebulaClient) openTransportIfNeeded() error {
+	if !wc.transport.IsOpen() {
+		wc.log.Debug(fmt.Sprintf("client did not open transport, and is going to open transport"))
+		err := wc.transport.Open()
+		return err
+	}
+
+	return nil
 }
