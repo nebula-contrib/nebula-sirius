@@ -58,13 +58,13 @@ func (f *NebulaClientFactory) ActivateObject(ctx context.Context, object *pool.P
 	client := object.Object.(*WrappedNebulaClient)
 
 	if !client.GetTransport().IsOpen() {
-		f.log.Debug(fmt.Sprintf("client was not open, going to open transport before activated..."))
+		f.log.Debug(fmt.Sprintf("[%s] - client was not open, going to open transport before activated...", client.GetClientName()))
 		err := client.GetTransport().Open()
 		if err != nil {
 			f.log.Error(fmt.Sprintf("%v", err))
 			return err
 		}
-		f.log.Debug(fmt.Sprintf("client is opened transport, activated succesfully"))
+		f.log.Debug(fmt.Sprintf("[%s] - client is opened transport, activated succesfully", client.GetClientName()))
 	}
 
 	return client.verifyClientVersion(ctx)

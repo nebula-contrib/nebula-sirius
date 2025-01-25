@@ -2,13 +2,16 @@ package nebula_go_sdk
 
 import (
 	"context"
+	"crypto/rand"
 	"crypto/tls"
+	"encoding/hex"
 	"fmt"
 	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/egasimov/nebula-go-sdk/nebula"
 	"github.com/egasimov/nebula-go-sdk/nebula/graph"
 	"github.com/egasimov/nebula-go-sdk/nebula/meta"
 	"github.com/egasimov/nebula-go-sdk/nebula/storage"
+	"math"
 	"net/http"
 	"time"
 )
@@ -33,6 +36,7 @@ type NebulaClientConfig struct {
 }
 
 type WrappedNebulaClient struct {
+	clientName    string
 	graphClient   *graph.GraphServiceClient
 	metaClient    *meta.MetaServiceClient
 	storageClient *storage.GraphStorageServiceClient
@@ -49,6 +53,7 @@ func newWrappedNebulaClient(
 	log Logger,
 ) *WrappedNebulaClient {
 	return &WrappedNebulaClient{
+		clientName:    fmt.Sprintf("NebulaClient_%s", randomBase16String(10)),
 		graphClient:   graphClient,
 		metaClient:    metaClient,
 		storageClient: storageClient,
@@ -64,13 +69,13 @@ func (c *WrappedNebulaClient) verifyClientVersion(ctx context.Context) error {
 	}
 	resp, err := c.graphClient.VerifyClientVersion(ctx, req)
 	if err != nil {
-		c.log.Error(fmt.Sprintf("error: %v", err))
+		c.log.Error(fmt.Sprintf("[%s] - error: %v", c.clientName, err))
 		defer c.transport.Close()
 		return err
 	}
 
 	if resp.GetErrorCode() != nebula.ErrorCode_SUCCEEDED {
-		c.log.Error(fmt.Sprintf("incompatible handshakeKey between client and server: %s", string(resp.GetErrorMsg())))
+		c.log.Error(fmt.Sprintf("[%s] - incompatible handshakeKey between client and server: %s", c.clientName, string(resp.GetErrorMsg())))
 		return fmt.Errorf("incompatible handshakeKey between client and server: %s", string(resp.GetErrorMsg()))
 	}
 	return nil
@@ -80,17 +85,21 @@ func (wc *WrappedNebulaClient) Close() error {
 	return wc.transport.Close()
 }
 
+func (wc *WrappedNebulaClient) GetClientName() string {
+	return wc.clientName
+}
+
 func (wc *WrappedNebulaClient) GetTransport() thrift.TTransport {
 	return wc.transport
 }
 
 func (wc *WrappedNebulaClient) GraphClient() (*graph.GraphServiceClient, error) {
 	if err := wc.openTransportIfNeeded(); err != nil {
-		wc.log.Error(fmt.Sprintf("%v", err))
+		wc.log.Error(fmt.Sprintf("[%s] - %v", wc.clientName, err))
 		return nil, err
 	}
 
-	wc.log.Debug(fmt.Sprintf("client opened transport"))
+	wc.log.Debug(fmt.Sprintf("[%s] - client opened transport", wc.clientName))
 	return wc.graphClient, nil
 }
 
@@ -100,7 +109,7 @@ func (wc *WrappedNebulaClient) MetaClient() (*meta.MetaServiceClient, error) {
 		return nil, err
 	}
 
-	wc.log.Debug(fmt.Sprintf("client opened transport"))
+	wc.log.Debug(fmt.Sprintf("[%s] - client opened transport", wc.clientName))
 	return wc.metaClient, nil
 }
 
@@ -110,16 +119,23 @@ func (wc *WrappedNebulaClient) StorageClient() (*storage.GraphStorageServiceClie
 		return nil, err
 	}
 
-	wc.log.Debug(fmt.Sprintf("client opened transport"))
+	wc.log.Debug(fmt.Sprintf("[%s] - client opened transport", wc.clientName))
 	return wc.storageClient, nil
 }
 
 func (wc *WrappedNebulaClient) openTransportIfNeeded() error {
 	if !wc.transport.IsOpen() {
-		wc.log.Debug(fmt.Sprintf("client did not open transport, and is going to open transport"))
+		wc.log.Debug(fmt.Sprintf("[%s] - client did not open transport, and is going to open transport", wc.clientName))
 		err := wc.transport.Open()
 		return err
 	}
 
 	return nil
+}
+
+func randomBase16String(l int) string {
+	buff := make([]byte, int(math.Ceil(float64(l)/2)))
+	rand.Read(buff)
+	str := hex.EncodeToString(buff)
+	return str[:l] // strip 1 extra character we get from odd length results
 }
