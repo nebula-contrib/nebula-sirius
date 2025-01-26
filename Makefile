@@ -15,10 +15,17 @@ unit:
 ########################################################################
 #######  BEGIN: DOCKER COMPOSE PART
 docker-compose-up:
-	cd nebula-light-deployment && docker-compose up -d
+	cd nebulagraph-light-deployment && docker-compose -f docker-compose-lite.yml up -d
 
 docker-compose-down:
-	cd nebula-light-deployment && docker-compose down
+	cd nebulagraph-light-deployment && docker-compose -f docker-compose-lite.yml down
+
+docker-compose-up-ssl:
+	cd nebulagraph-light-deployment && docker-compose -f docker-compose-lite-ssl.yml up -d
+
+docker-compose-down-ssl:
+	cd nebulagraph-light-deployment && docker-compose -f docker-compose-lite-ssl.yml down
+
 ########################################################################
 #######  END: DOCKER COMPOSE PART
 
