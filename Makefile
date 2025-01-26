@@ -1,4 +1,27 @@
-.PHONY: generate-from-contracts
+.PHONY: generate-from-contracts, fmt, lint, unit, docker-compose-up, docker-compose-down
+
+fmt:
+	go fmt ./...
+
+lint:
+	@test -z `gofmt -l *.go` || (echo "Please run 'make fmt' to format Go code" && exit 1)
+
+unit:
+	go mod tidy
+	go test -v -race --covermode=atomic --coverprofile coverage.out -cover -json
+	go tool cover -func=coverage.out
+
+
+########################################################################
+#######  BEGIN: DOCKER COMPOSE PART
+docker-compose-up:
+	cd nebula-light-deployment && docker-compose up -d
+
+docker-compose-down:
+	cd nebula-light-deployment && docker-compose down
+########################################################################
+#######  END: DOCKER COMPOSE PART
+
 
 ########################################################################
 #######  BEGIN: APACHE THRIFT CODE GENERATION PART

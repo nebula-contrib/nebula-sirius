@@ -21,6 +21,7 @@ func main() {
 			},
 		},
 		nebula_go_sdk.DefaultLogger{},
+		nebula_go_sdk.DefaultClientNameGenerator,
 	)
 
 	// Build a pool of nebula clients based on clientFactory and poolConfig
@@ -51,7 +52,7 @@ func main() {
 	client := clientObj.(*nebula_go_sdk.WrappedNebulaClient)
 
 	// Use the client...
-	log.Println(fmt.Sprintf("Got a Thrift client: %v", client))
+	log.Println(fmt.Sprintf("Got a Thrift client with name: %s %v", client.GetClientName(), client))
 
 	// Take GraphClient to execute nebula queries on nebula graph service
 	g, err := client.GraphClient()

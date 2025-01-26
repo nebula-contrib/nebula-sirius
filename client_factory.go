@@ -19,7 +19,9 @@ package nebula_go_sdk
 
 import (
 	"context"
+	"crypto/rand"
 	"crypto/tls"
+	"encoding/hex"
 	"fmt"
 	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/egasimov/nebula-go-sdk/nebula/graph"
@@ -27,21 +29,29 @@ import (
 	"github.com/egasimov/nebula-go-sdk/nebula/storage"
 	pool "github.com/jolestar/go-commons-pool"
 	"golang.org/x/net/http2"
+	"math"
 	"net"
 	"net/http"
 	"strconv"
 )
 
-// NebulaClientFactory is responsible for creating instances of the Nebula client.
+// NebulaClientFactory represents a factory for creating new instances of the
+// Nebula client.
 //
-// It uses the provided configuration and logger to initialize the client instances,
-// which can then be used to interact with the Nebula graph database.
+// The factory is configured using the provided NebulaClientConfig and a
+// logger. The logger is used to log any errors that occur while creating or
+// using the client instances. The client name generator function is used to
+// generate a client name for each instance of the Nebula client.
 type NebulaClientFactory struct {
-	conf *NebulaClientConfig
-	log  Logger
+	conf              *NebulaClientConfig
+	log               Logger
+	genClientNameFunc func(ctx context.Context) (string, error)
 }
 
-// InitNebulaClientFactoryWithDefaultLogger creates a new NebulaClientFactory
+// ClientNameGeneratorFunc is a function that generates a client name based on the context.
+type ClientNameGeneratorFunc func(ctx context.Context) (string, error)
+
+// InitNebulaClientFactoryWithDefault creates a new NebulaClientFactory
 // with the given configuration and a default logger.
 //
 // The returned factory can be used to create new instances of the Nebula
@@ -50,8 +60,8 @@ type NebulaClientFactory struct {
 // The given configuration will be used to initialize the new client
 // instances. The default logger will be used to log any errors that occur
 // while creating or using the client instances.
-func InitNebulaClientFactoryWithDefaultLogger(conf *NebulaClientConfig) *NebulaClientFactory {
-	return NewNebulaClientFactory(conf, DefaultLogger{})
+func InitNebulaClientFactoryWithDefault(conf *NebulaClientConfig) *NebulaClientFactory {
+	return NewNebulaClientFactory(conf, DefaultLogger{}, DefaultClientNameGenerator)
 }
 
 // NewNebulaClientFactory creates a new NebulaClientFactory with the given
@@ -63,10 +73,11 @@ func InitNebulaClientFactoryWithDefaultLogger(conf *NebulaClientConfig) *NebulaC
 // The given configuration will be used to initialize the new client
 // instances. The logger will be used to log any errors that occur while
 // creating or using the client instances.
-func NewNebulaClientFactory(conf *NebulaClientConfig, log Logger) *NebulaClientFactory {
+func NewNebulaClientFactory(conf *NebulaClientConfig, log Logger, genClientNameFunc ClientNameGeneratorFunc) *NebulaClientFactory {
 	return &NebulaClientFactory{
-		conf: conf,
-		log:  log,
+		conf:              conf,
+		log:               log,
+		genClientNameFunc: genClientNameFunc,
 	}
 }
 
@@ -161,8 +172,17 @@ func (f *NebulaClientFactory) PassivateObject(ctx context.Context, object *pool.
 	return nil
 }
 
-// create socket based transport
+// GetClientNameGenerator returns the client name generator function
+func (f *NebulaClientFactory) GetClientNameGenerator() ClientNameGeneratorFunc {
+	return f.genClientNameFunc
+}
+
+// prepareTransportAndProtocolFactory creates a new instance of thrift.TTransport
 func (f *NebulaClientFactory) prepareTransportAndProtocolFactory(ctx context.Context) (thrift.TTransport, thrift.TProtocolFactory, error) {
+	if ctx.Err() == context.Canceled {
+		return nil, nil, ctx.Err()
+	}
+
 	hostAddress := f.conf.HostAddress
 	timeout := f.conf.Timeout
 	sslConfig := f.conf.SslConfig
@@ -207,6 +227,10 @@ func (f *NebulaClientFactory) prepareTransportAndProtocolFactory(ctx context.Con
 }
 
 func (f *NebulaClientFactory) getTransportAndProtocolFactoryForHttp2(ctx context.Context) (thrift.TTransport, thrift.TProtocolFactory, error) {
+	if ctx.Err() == context.Canceled {
+		return nil, nil, ctx.Err()
+	}
+
 	hostAddress := f.conf.HostAddress
 	sslConfig := f.conf.SslConfig
 	httpHeader := f.conf.HttpHeader
@@ -271,7 +295,7 @@ func (f *NebulaClientFactory) getTransportAndProtocolFactoryForHttp2(ctx context
 	return transport, pf, nil
 }
 
-// Factory function to create new Thrift client
+// createWrappedNebulaClient creates a new instance of WrappedNebulaClient
 func (f *NebulaClientFactory) createWrappedNebulaClient(ctx context.Context) (interface{}, error) {
 	var (
 		err       error
@@ -295,5 +319,20 @@ func (f *NebulaClientFactory) createWrappedNebulaClient(ctx context.Context) (in
 	metaClient := meta.NewMetaServiceClientFactory(transport, pf)
 	storageClient := storage.NewGraphStorageServiceClientFactory(transport, pf)
 
-	return newWrappedNebulaClient(graphClient, storageClient, metaClient, transport, f.log), nil
+	clientName, err := f.genClientNameFunc(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return newWrappedNebulaClient(graphClient, storageClient, metaClient, transport, clientName, f.log), nil
+}
+
+// DefaultClientNameGenerator is a default implementation of ClientNameGenerator.
+// It generates a random hex string of length 10 and prefix it with "NebulaClient_".
+// The generated name is used to identify the client in the logs.
+func DefaultClientNameGenerator(ctx context.Context) (string, error) {
+	l := 10
+	buff := make([]byte, int(math.Ceil(float64(l)/2)))
+	rand.Read(buff)
+	str := hex.EncodeToString(buff)
+	return fmt.Sprintf("NebulaClient_%s", str[:l]), nil // strip 1 extra character we get from odd length results
 }

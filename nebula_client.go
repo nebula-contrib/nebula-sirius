@@ -19,16 +19,13 @@ package nebula_go_sdk
 
 import (
 	"context"
-	"crypto/rand"
 	"crypto/tls"
-	"encoding/hex"
 	"fmt"
 	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/egasimov/nebula-go-sdk/nebula"
 	"github.com/egasimov/nebula-go-sdk/nebula/graph"
 	"github.com/egasimov/nebula-go-sdk/nebula/meta"
 	"github.com/egasimov/nebula-go-sdk/nebula/storage"
-	"math"
 	"net/http"
 	"time"
 )
@@ -82,10 +79,11 @@ func newWrappedNebulaClient(
 	storageClient *storage.GraphStorageServiceClient,
 	metaClient *meta.MetaServiceClient,
 	transport thrift.TTransport,
+	clientName string,
 	log Logger,
 ) *WrappedNebulaClient {
 	return &WrappedNebulaClient{
-		clientName:    fmt.Sprintf("NebulaClient_%s", randomBase16String(10)),
+		clientName:    clientName,
 		graphClient:   graphClient,
 		metaClient:    metaClient,
 		storageClient: storageClient,
@@ -94,6 +92,61 @@ func newWrappedNebulaClient(
 	}
 }
 
+// Close closes the underlying transport.
+// It is safe to call this method multiple times.
+func (wc *WrappedNebulaClient) Close() error {
+	wc.log.Debug(fmt.Sprintf("[%s] - Closing Nebula client: %+v", wc.clientName, wc.clientName))
+
+	if wc.transport.IsOpen() && wc.transport != nil {
+		return wc.transport.Close()
+	}
+	return nil
+}
+
+// GetClientName returns the name of the client.
+func (wc *WrappedNebulaClient) GetClientName() string {
+	return wc.clientName
+}
+
+// GetTransport returns the underlying transport.
+func (wc *WrappedNebulaClient) GetTransport() thrift.TTransport {
+	return wc.transport
+}
+
+// GraphClient returns the graph client
+func (wc *WrappedNebulaClient) GraphClient() (*graph.GraphServiceClient, error) {
+	if err := wc.openTransportIfNeeded(); err != nil {
+		wc.log.Error(fmt.Sprintf("[%s] - %v", wc.clientName, err))
+		return nil, err
+	}
+
+	wc.log.Debug(fmt.Sprintf("[%s] - client opened transport", wc.clientName))
+	return wc.graphClient, nil
+}
+
+// MetaClient returns the meta client
+func (wc *WrappedNebulaClient) MetaClient() (*meta.MetaServiceClient, error) {
+	if err := wc.openTransportIfNeeded(); err != nil {
+		wc.log.Error(fmt.Sprintf("[%s] - %v", wc.clientName, err))
+		return nil, err
+	}
+
+	wc.log.Debug(fmt.Sprintf("[%s] - client opened transport", wc.clientName))
+	return wc.metaClient, nil
+}
+
+// StorageClient returns the storage client
+func (wc *WrappedNebulaClient) StorageClient() (*storage.GraphStorageServiceClient, error) {
+	if err := wc.openTransportIfNeeded(); err != nil {
+		wc.log.Error(fmt.Sprintf("[%s] - %v", wc.clientName, err))
+		return nil, err
+	}
+
+	wc.log.Debug(fmt.Sprintf("[%s] - client opened transport", wc.clientName))
+	return wc.storageClient, nil
+}
+
+// verifyClientVersion checks if the client version is compatible with the server version
 func (c *WrappedNebulaClient) verifyClientVersion(ctx context.Context) error {
 	req := graph.NewVerifyClientVersionReq()
 	if c.clientCfg.HandshakeKey != "" {
@@ -113,55 +166,6 @@ func (c *WrappedNebulaClient) verifyClientVersion(ctx context.Context) error {
 	return nil
 }
 
-// Close closes the underlying transport.
-// It is safe to call this method multiple times.
-func (wc *WrappedNebulaClient) Close() error {
-	wc.log.Debug(fmt.Sprintf("[%s] - Closing Nebula client: %+v", wc.clientName, wc.clientName))
-
-	if wc.transport.IsOpen() && wc.transport != nil {
-		return wc.transport.Close()
-	}
-	return nil
-}
-
-func (wc *WrappedNebulaClient) GetClientName() string {
-	return wc.clientName
-}
-
-func (wc *WrappedNebulaClient) GetTransport() thrift.TTransport {
-	return wc.transport
-}
-
-func (wc *WrappedNebulaClient) GraphClient() (*graph.GraphServiceClient, error) {
-	if err := wc.openTransportIfNeeded(); err != nil {
-		wc.log.Error(fmt.Sprintf("[%s] - %v", wc.clientName, err))
-		return nil, err
-	}
-
-	wc.log.Debug(fmt.Sprintf("[%s] - client opened transport", wc.clientName))
-	return wc.graphClient, nil
-}
-
-func (wc *WrappedNebulaClient) MetaClient() (*meta.MetaServiceClient, error) {
-	if err := wc.openTransportIfNeeded(); err != nil {
-		wc.log.Error(fmt.Sprintf("[%s] - %v", wc.clientName, err))
-		return nil, err
-	}
-
-	wc.log.Debug(fmt.Sprintf("[%s] - client opened transport", wc.clientName))
-	return wc.metaClient, nil
-}
-
-func (wc *WrappedNebulaClient) StorageClient() (*storage.GraphStorageServiceClient, error) {
-	if err := wc.openTransportIfNeeded(); err != nil {
-		wc.log.Error(fmt.Sprintf("[%s] - %v", wc.clientName, err))
-		return nil, err
-	}
-
-	wc.log.Debug(fmt.Sprintf("[%s] - client opened transport", wc.clientName))
-	return wc.storageClient, nil
-}
-
 func (wc *WrappedNebulaClient) openTransportIfNeeded() error {
 	if !wc.transport.IsOpen() {
 		wc.log.Debug(fmt.Sprintf("[%s] - client did not open transport, and is going to open transport", wc.clientName))
@@ -170,11 +174,4 @@ func (wc *WrappedNebulaClient) openTransportIfNeeded() error {
 	}
 
 	return nil
-}
-
-func randomBase16String(l int) string {
-	buff := make([]byte, int(math.Ceil(float64(l)/2)))
-	rand.Read(buff)
-	str := hex.EncodeToString(buff)
-	return str[:l] // strip 1 extra character we get from odd length results
 }
