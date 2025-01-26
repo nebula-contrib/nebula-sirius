@@ -1,3 +1,20 @@
+/*
+ *
+ * Copyright (c) 2023 Elchin Gasimov. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package nebula_go_sdk
 
 import (
@@ -15,15 +32,37 @@ import (
 	"strconv"
 )
 
+// NebulaClientFactory is responsible for creating instances of the Nebula client.
+//
+// It uses the provided configuration and logger to initialize the client instances,
+// which can then be used to interact with the Nebula graph database.
 type NebulaClientFactory struct {
 	conf *NebulaClientConfig
 	log  Logger
 }
 
+// InitNebulaClientFactoryWithDefaultLogger creates a new NebulaClientFactory
+// with the given configuration and a default logger.
+//
+// The returned factory can be used to create new instances of the Nebula
+// client, which can be used to interact with the Nebula graph database.
+//
+// The given configuration will be used to initialize the new client
+// instances. The default logger will be used to log any errors that occur
+// while creating or using the client instances.
 func InitNebulaClientFactoryWithDefaultLogger(conf *NebulaClientConfig) *NebulaClientFactory {
 	return NewNebulaClientFactory(conf, DefaultLogger{})
 }
 
+// NewNebulaClientFactory creates a new NebulaClientFactory with the given
+// configuration and logger.
+//
+// The returned factory can be used to create new instances of the Nebula
+// client, which can be used to interact with the Nebula graph database.
+//
+// The given configuration will be used to initialize the new client
+// instances. The logger will be used to log any errors that occur while
+// creating or using the client instances.
 func NewNebulaClientFactory(conf *NebulaClientConfig, log Logger) *NebulaClientFactory {
 	return &NebulaClientFactory{
 		conf: conf,
@@ -31,6 +70,17 @@ func NewNebulaClientFactory(conf *NebulaClientConfig, log Logger) *NebulaClientF
 	}
 }
 
+// MakeObject is the implementation of the ObjectFactory interface method.
+//
+// This method will create a new instance of the Nebula client using the
+// configuration provided when creating the factory.
+//
+// The returned PooledObject will contain the newly created client and can
+// be used to interact with the Nebula graph database.
+//
+// The ctx context will be used to generate the client instance. If the
+// context is canceled before the client instance is generated, the
+// method will return an error.
 func (f *NebulaClientFactory) MakeObject(ctx context.Context) (*pool.PooledObject, error) {
 	c, err := f.createWrappedNebulaClient(ctx)
 	if err != nil {
@@ -40,12 +90,33 @@ func (f *NebulaClientFactory) MakeObject(ctx context.Context) (*pool.PooledObjec
 	return pool.NewPooledObject(c), nil
 }
 
+// DestroyObject is the implementation of the ObjectFactory interface method.
+//
+// This method is responsible for destroying a pooled object. It closes the
+// transport of the underlying WrappedNebulaClient, effectively terminating
+// the connection to the Nebula graph database.
+//
+// The ctx context is not used directly in this method but is included to
+// satisfy the interface requirements.
+//
+// Returns an error if there is a failure in closing the transport.
 func (f *NebulaClientFactory) DestroyObject(ctx context.Context, object *pool.PooledObject) error {
 	client := object.Object.(*WrappedNebulaClient)
 	return client.GetTransport().Close()
 }
 
+// ValidateObject checks whether the given object is valid or not.
+//
+// The "validity" of an object is determined by whether its underlying
+// transport is open or not.
+//
+// This is used by the pool to remove dead connections from the pool.
 func (f *NebulaClientFactory) ValidateObject(ctx context.Context, object *pool.PooledObject) bool {
+	// Check if the context is cancelled before proceeding
+	if err := ctx.Err(); err != nil {
+		return false
+	}
+
 	// do validate
 	client := object.Object.(*WrappedNebulaClient)
 
@@ -53,6 +124,10 @@ func (f *NebulaClientFactory) ValidateObject(ctx context.Context, object *pool.P
 	return client.GetTransport().IsOpen()
 }
 
+// ActivateObject is called when an object is borrowed from the pool.
+// It may be used to reset or initialize the connection. In this case,
+// it will open the transport if it is not already open, and then verify
+// the client version.
 func (f *NebulaClientFactory) ActivateObject(ctx context.Context, object *pool.PooledObject) error {
 	// Optionally reset or initialize the connection
 	client := object.Object.(*WrappedNebulaClient)
@@ -61,7 +136,7 @@ func (f *NebulaClientFactory) ActivateObject(ctx context.Context, object *pool.P
 		f.log.Debug(fmt.Sprintf("[%s] - client was not open, going to open transport before activated...", client.GetClientName()))
 		err := client.GetTransport().Open()
 		if err != nil {
-			f.log.Error(fmt.Sprintf("%v", err))
+			f.log.Error(fmt.Sprintf("[%s] - %v", client.GetClientName(), err))
 			return err
 		}
 		f.log.Debug(fmt.Sprintf("[%s] - client is opened transport, activated succesfully", client.GetClientName()))
@@ -70,6 +145,10 @@ func (f *NebulaClientFactory) ActivateObject(ctx context.Context, object *pool.P
 	return client.verifyClientVersion(ctx)
 }
 
+// PassivateObject is called when an object is returned to the pool.
+//
+// It may be used to reset or close the connection. In this case,
+// it will close the transport if it is already open.
 func (f *NebulaClientFactory) PassivateObject(ctx context.Context, object *pool.PooledObject) error {
 	// do passivate
 	client := object.Object.(*WrappedNebulaClient)

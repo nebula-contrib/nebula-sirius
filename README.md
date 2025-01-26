@@ -1,4 +1,29 @@
-## Working sample nebula go sdk
+**Nebula Go SDK**
+=====================
+
+**What is Nebula Go SDK?**
+----------------------------
+
+Nebula Go SDK is a Go library that provides a simple and efficient way to interact with the Nebula Graph database. It allows you to connect to Nebula Graph, execute queries, and retrieve results.
+
+**Why do we need Nebula Go SDK?**
+--------------------------------------
+
+In many applications, interacting with the Nebula Graph database can be complex. Nebula Go SDK simplifies this process by providing a standardized way to connect to Nebula Graph, execute queries, and retrieve results. This library is particularly useful in building applications that need to interact with the Nebula Graph database.
+
+**Installation**
+---------------
+
+To install Nebula Go SDK into your project, use the following command:
+
+```bash
+go get github.com/egasimov/nebula-go-sdk
+```
+
+**Usage**
+---------
+
+To use Nebula Go SDK, simply import the library and create a new instance of the `GraphClient` struct.
 
 ```go
 package main
@@ -87,3 +112,38 @@ func main() {
 
 
 ```
+
+**Examples**
+--------------
+You may refer the working samples located under [examples](./examples) folder.
+
+**Contribution**
+--------------
+
+We welcome contributions to Nebula Go SDK. If you're interested in contributing, please follow these steps:
+
+1. Fork the repository on GitHub.
+2. Create a new branch for your feature or bug fix.
+3. Write tests for your changes.
+4. Submit a pull request.
+
+**LICENSE**
+-------
+Note
+
+This project includes code copied and pasted from the Nebula Go repository (https://github.com/vesoft-inc/nebula-go). The original code is licensed under the Apache License 2.0, and we acknowledge the original authors of this code.
+
+
+Nebula Go SDK is released under the Apache 2.0 License.
+
+**Code of Conduct**
+------------------
+
+We follow the Go community's Code of Conduct. Please read it before contributing.
+
+**Support**
+----------
+
+If you have any questions or need help with Nebula Go SDK, please open an issue on GitHub.
+
+**Thank you for using Nebula Go SDK!**
