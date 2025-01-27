@@ -1,4 +1,4 @@
-.PHONY: generate-from-contracts, fmt, lint, unit, docker-compose-up, docker-compose-down
+.PHONY: download-thrift-files, generate-from-contracts, fmt, lint, unit, docker-compose-up, docker-compose-down
 
 fmt:
 	go fmt ./...
@@ -28,6 +28,24 @@ docker-compose-down-ssl:
 
 ########################################################################
 #######  END: DOCKER COMPOSE PART
+
+
+########################################################################
+#######  BEGIN: THRIFT FILES SYNC PART
+########################################################################
+THRIFT_FILES_DIR = ./thriftfiles
+REMOTE_THRIFT_FILES_URL = https://raw.githubusercontent.com/vesoft-inc/nebula/master/src/interface
+
+download-thrift-files: $(THRIFT_FILES_DIR)
+		curl -s -o $(THRIFT_FILES_DIR)/common.thrift $(REMOTE_THRIFT_FILES_URL)/common.thrift \
+		curl -s -o $(THRIFT_FILES_DIR)/meta.thrift $(REMOTE_THRIFT_FILES_URL)/meta.thrift \
+		curl -s -o $(THRIFT_FILES_DIR)/graph.thrift $(REMOTE_THRIFT_FILES_URL)/graph.thrift \
+		curl -s -o $(THRIFT_FILES_DIR)/storage.thrift $(REMOTE_THRIFT_FILES_URL)/storage.thrift \
+		curl -s -o $(THRIFT_FILES_DIR)/raftex.thrift $(REMOTE_THRIFT_FILES_URL)/raftex.thrift \
+
+########################################################################
+#######  END: THRIFT FILES SYNC PART
+########################################################################
 
 
 ########################################################################
