@@ -25,92 +25,99 @@ go get github.com/egasimov/nebula-go-sdk
 
 To use Nebula Go SDK, simply import the library and create a new instance of the `GraphClient` struct.
 
+
+
+Here is the restructured Usage section with multiple code snippets for easier understanding:
+
+### Usage
+
+#### Step 1: Configure the Nebula Client Factory
+
+First, we need to configure the Nebula Client Factory with the provided configuration.
+
 ```go
-package main
-
-import (
-	"context"
-	"fmt"
-	"github.com/egasimov/nebula-go-sdk"
-	nebulagraph_light_deployment "github.com/egasimov/nebula-go-sdk/nebulagraph-light-deployment"
-	"github.com/jolestar/go-commons-pool"
-	"log"
+clientFactory := nebula_go_sdk.NewNebulaClientFactory(
+	&nebula_go_sdk.NebulaClientConfig{
+		HostAddress: nebula_go_sdk.HostAddress{
+			Host: nebulagraph_light_deployment.HostGraphD,
+			Port: nebulagraph_light_deployment.PortGraphD,
+		},
+	},
+	nebula_go_sdk.DefaultLogger{},
 )
+```
 
-func main() {
-	ctx := context.Background()
+#### Step 2: Create a Pool of Nebula Clients
 
-	// Configure ClientFactory that serves creation of nebula clients based on the provided configuration
-	clientFactory := nebula_go_sdk.NewNebulaClientFactory(
-		&nebula_go_sdk.NebulaClientConfig{
-			HostAddress: nebula_go_sdk.HostAddress{
-				Host: nebulagraph_light_deployment.HostGraphD,
-				Port: nebulagraph_light_deployment.PortGraphD,
-			},
-		},
-		nebula_go_sdk.DefaultLogger{},
-	)
+Next, we create a pool of Nebula clients based on the client factory and pool configuration.
+P:S for full reference of ObjectPoolConfig, please refer to [go-commons-pool documentation](https://pkg.go.dev/github.com/jolestar/go-commons-pool#ObjectPoolConfig)
+```go
+nebulaClientPool := pool.NewObjectPool(
+	ctx,
+	clientFactory,
+	&pool.ObjectPoolConfig{
+		MaxIdle:  5,
+		MaxTotal: 10,
+		//MaxWaitMillis: 1000,
+	},
+)
+```
 
-	// Build a pool of nebula clients based on clientFactory and poolConfig
-	nebulaClientPool := pool.NewObjectPool(
-		ctx,
-		clientFactory,
-		&pool.ObjectPoolConfig{
-			MaxIdle:  5,
-			MaxTotal: 10,
-			//MaxWaitMillis: 1000,
-		},
-	)
+#### Step 3: Borrow a Thrift Client from the Pool
 
-	// Borrow a Thrift client from the pool
-	clientObj, err := nebulaClientPool.BorrowObject(ctx)
-	if err != nil {
-		log.Fatalf("Error borrowing object from pool: %s", err)
-	}
+We then borrow a Thrift client from the pool.
 
-	// Return the object to the pool when done
-	defer func(thriftPool *pool.ObjectPool, ctx context.Context, object interface{}) {
-		err := thriftPool.ReturnObject(ctx, object)
-		if err != nil {
-			log.Fatalf("Thrift client error: %v", err)
-		}
-	}(nebulaClientPool, ctx, clientObj)
-
-	client := clientObj.(*nebula_go_sdk.WrappedNebulaClient)
-
-	// Use the client...
-	log.Println(fmt.Sprintf("Got a Thrift client: %v", client))
-
-	// Take GraphClient to execute nebula queries on nebula graph service
-	g, err := client.GraphClient()
-	if err != nil {
-		log.Fatalf("Error getting graph client: %v", err)
-	}
-
-	// First, Make authentication request(username, passwd) to nebula database
-	a, err := g.Authenticate(
-		ctx,
-		[]byte(nebulagraph_light_deployment.USERNAME),
-		[]byte(nebulagraph_light_deployment.PASSWORD),
-	)
-	if err != nil {
-		log.Fatalf("Error executing query via graph client: %v", err)
-	}
-
-	log.Println(fmt.Sprintf("SessionId: %d, ErrorCode: %s, ErrorMessage: %s", a.GetSessionID(), a.GetErrorCode(), a.GetErrorMsg()))
-
-	log.Println(" - - - - - - - - - - - - - - - - - - - - - - - - ")
-	nglQuery := `SHOW HOSTS;`
-	a1, err := g.Execute(ctx, *a.SessionID, []byte(nglQuery))
-	if err != nil {
-		log.Fatalf("Error executing query via graph client: %v", err)
-	}
-
-	log.Println(nebula_go_sdk.GenResultSet(a1))
-
+```go
+clientObj, err := nebulaClientPool.BorrowObject(ctx)
+if err != nil {
+	log.Fatalf("Error borrowing object from pool: %s", err)
 }
+```
 
+#### Step 4: Get the Graph Client
 
+We take the GraphClient to execute Nebula queries on the Nebula graph service.
+
+```go
+g, err := client.GraphClient()
+if err != nil {
+	log.Fatalf("Error getting graph client: %v", err)
+}
+```
+
+#### Step 5: Authenticate with the Nebula Database
+
+We make an authentication request to the Nebula database.
+
+```go
+a, err := g.Authenticate(
+	ctx,
+	[]byte(nebulagraph_light_deployment.USERNAME),
+	[]byte(nebulagraph_light_deployment.PASSWORD),
+)
+if err != nil {
+	log.Fatalf("Error executing query via graph client: %v", err)
+}
+```
+
+#### Step 6: Execute a Query
+
+Finally, we execute a query using the GraphClient.
+
+```go
+nglQuery := `SHOW HOSTS;`
+a1, err := g.Execute(ctx, *a.SessionID, []byte(nglQuery))
+if err != nil || a1.GetErrorCode() != nebula.ErrorCode_SUCCEEDED{
+	log.Fatalf("Error executing query via graph client: %v %s", err, a1.ErrorMsg)
+}
+```
+
+#### Step 7: Print the Result Set
+
+We print the result set of the query.
+
+```go
+log.Println(nebula_go_sdk.GenResultSet(a1))
 ```
 
 **Examples**

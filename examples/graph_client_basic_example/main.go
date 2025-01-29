@@ -77,7 +77,7 @@ func main() {
 	nglQuery := `SHOW HOSTS;`
 	a1, err := g.Execute(ctx, *a.SessionID, []byte(nglQuery))
 	if err != nil || a1.GetErrorCode() != nebula.ErrorCode_SUCCEEDED {
-		log.Fatalf("Error executing query via graph client: %v", err)
+		log.Fatalf("Error executing query via graph client: %v %s", err, a1.ErrorMsg)
 	}
 
 	log.Println(nebula_go_sdk.GenResultSet(a1))
