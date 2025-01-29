@@ -1473,7 +1473,7 @@ func (res ResultSet) MakeDotGraphByStruct() string {
 }
 
 // MakeProfilingData generate profiling data for both Row and TCK formats.
-func MakeProfilingData(planNodeDesc *graph.PlanNodeDescription, isTckFmt bool) string {
+func MakeProfilingData(planNodeDesc *graph.PlanNodeDescription, isTckFmt bool) (string, error) {
 	var profileArr []string
 	re, err := regexp.Compile(`^[^{(\[]\w+`)
 	if err != nil {
@@ -1509,8 +1509,11 @@ func MakeProfilingData(planNodeDesc *graph.PlanNodeDescription, isTckFmt bool) s
 		allProfiles = fmt.Sprintf("[%s]", allProfiles)
 	}
 	var buffer bytes.Buffer
-	json.Indent(&buffer, []byte(allProfiles), "", "  ")
-	return buffer.String()
+	err = json.Indent(&buffer, []byte(allProfiles), "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return buffer.String(), nil
 }
 
 // generate operator info for Row format.
@@ -1535,8 +1538,8 @@ func MakeOperatorInfo(planNodeDesc *graph.PlanNodeDescription) string {
 	return strings.Join(columnInfo, "\n")
 }
 
-// explain/profile format="row"
-func (res ResultSet) MakePlanByRow() [][]interface{} {
+// MakePlanByRow explain/profile format="row"
+func (res ResultSet) MakePlanByRow() ([][]interface{}, error) {
 	p := res.GetPlanDesc()
 	planNodeDescs := p.GetPlanNodeDescs()
 	var rows [][]interface{}
@@ -1555,7 +1558,11 @@ func (res ResultSet) MakePlanByRow() [][]interface{} {
 		}
 
 		if planNodeDesc.IsSetProfiles() {
-			row = append(row, MakeProfilingData(planNodeDesc, false))
+			r, err := MakeProfilingData(planNodeDesc, false)
+			if err != nil {
+				return nil, err
+			}
+			row = append(row, r)
 		} else {
 			row = append(row, "")
 		}
@@ -1563,11 +1570,11 @@ func (res ResultSet) MakePlanByRow() [][]interface{} {
 		row = append(row, opInfo)
 		rows = append(rows, row)
 	}
-	return rows
+	return rows, nil
 }
 
-// explain/profile format="tck"
-func (res ResultSet) MakePlanByTck() [][]interface{} {
+// MakePlanByTck explain/profile format="tck"
+func (res ResultSet) MakePlanByTck() ([][]interface{}, error) {
 	p := res.GetPlanDesc()
 	planNodeDescs := p.GetPlanNodeDescs()
 	var rows [][]interface{}
@@ -1587,8 +1594,15 @@ func (res ResultSet) MakePlanByTck() [][]interface{} {
 
 		if planNodeDesc.IsSetProfiles() {
 			var compactProfilingData bytes.Buffer
+			r, err := MakeProfilingData(planNodeDesc, true)
+			if err != nil {
+				return nil, err
+			}
 			// compress JSON data and remove whitespace characters
-			json.Compact(&compactProfilingData, []byte(MakeProfilingData(planNodeDesc, true)))
+			err = json.Compact(&compactProfilingData, []byte(r))
+			if err != nil {
+				return nil, err
+			}
 			row = append(row, compactProfilingData.String())
 		} else {
 			row = append(row, "")
@@ -1598,5 +1612,5 @@ func (res ResultSet) MakePlanByTck() [][]interface{} {
 
 		rows = append(rows, row)
 	}
-	return rows
+	return rows, nil
 }

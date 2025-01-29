@@ -217,7 +217,8 @@ func (f *NebulaClientFactory) prepareTransportAndProtocolFactory(ctx context.Con
 		return nil, nil, err
 	}
 
-	transport = thrift.NewTHeaderTransport(buffTransport)
+	//transport = thrift.NewTHeaderTransport(buffTransport)
+	transport = thrift.NewTHeaderTransportConf(buffTransport, &thrift.TConfiguration{})
 
 	//pf = thrift.NewTHeaderProtocolFactory()
 	pf = thrift.NewTHeaderProtocolFactoryConf(
@@ -332,7 +333,10 @@ func (f *NebulaClientFactory) createWrappedNebulaClient(ctx context.Context) (in
 func DefaultClientNameGenerator(ctx context.Context) (string, error) {
 	l := 10
 	buff := make([]byte, int(math.Ceil(float64(l)/2)))
-	rand.Read(buff)
+	_, err := rand.Read(buff)
+	if err != nil {
+		return "", err
+	}
 	str := hex.EncodeToString(buff)
 	return fmt.Sprintf("NebulaClient_%s", str[:l]), nil // strip 1 extra character we get from odd length results
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/egasimov/nebula-go-sdk"
+	"github.com/egasimov/nebula-go-sdk/nebula"
 	nebulagraph_light_deployment "github.com/egasimov/nebula-go-sdk/nebulagraph-light-deployment"
 	"github.com/jolestar/go-commons-pool"
 	"log"
@@ -75,7 +76,7 @@ func main() {
 	log.Println(" - - - - - - - - - - - - - - - - - - - - - - - - ")
 	nglQuery := `SHOW HOSTS;`
 	a1, err := g.Execute(ctx, *a.SessionID, []byte(nglQuery))
-	if err != nil {
+	if err != nil || a1.GetErrorCode() != nebula.ErrorCode_SUCCEEDED {
 		log.Fatalf("Error executing query via graph client: %v", err)
 	}
 
