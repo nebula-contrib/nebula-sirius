@@ -21,7 +21,7 @@ docker-compose-down:
 	cd nebulagraph-light-deployment && docker-compose -f docker-compose-lite.yml down
 
 docker-compose-up-ssl:
-	cd nebulagraph-light-deployment && docker-compose -f docker-compose-lite-ssl.yml up -d
+	cd nebulagraph-light-deployment && enable_ssl=true docker-compose -f docker-compose-lite-ssl.yml up -d
 
 docker-compose-down-ssl:
 	cd nebulagraph-light-deployment && docker-compose -f docker-compose-lite-ssl.yml down

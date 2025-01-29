@@ -4,11 +4,6 @@ services:
     image: docker.io/vesoft/nebula-metad:nightly
     environment:
       USER: root
-      enable_ssl: true
-      ca_path: /secrets/root.crt
-      password_path: ""
-      cert_path: /secrets/server.crt
-      key_path: /secrets/server.key
     command:
       - --meta_server_addrs=metad0:9559
       - --local_ip=metad0
@@ -53,11 +48,6 @@ services:
     image: docker.io/vesoft/nebula-storaged:nightly
     environment:
       USER: root
-      enable_ssl: true
-      ca_path: /secrets/root.crt
-      password_path: ""
-      cert_path: /secrets/server.crt
-      key_path: /secrets/server.key
     command:
       - --meta_server_addrs=metad0:9559
       - --local_ip=storaged0
@@ -103,11 +93,6 @@ services:
     image: docker.io/vesoft/nebula-graphd:nightly
     environment:
       USER: root
-      enable_ssl: true
-      ca_path: /secrets/root.crt
-      password_path: ""
-      cert_path: /secrets/server.crt
-      key_path: /secrets/server.key
     command:
       - --meta_server_addrs=metad0:9559
       - --port=9669
@@ -158,18 +143,14 @@ services:
     entrypoint: ""
     environment:
       ACTIVATOR_RETRY: ${ACTIVATOR_RETRY:-30}
-      enable_ssl: true
-      ca_path: /secrets/root.crt
-      password_path: ""
-      cert_path: /secrets/server.crt
-      key_path: /secrets/server.key
     command:
       - sh
       - -c
       - |
         for i in `seq 1 $$ACTIVATOR_RETRY`; do
-          nebula-console -addr graphd -port 9669 -u root -p nebula -enable_ssl=true \
-            -ssl_root_ca_path /secrets/root.crt \
+          nebula-console -addr graphd -port 9669 -u root -p nebula \
+            -enable_ssl=true \
+            -ssl_root_ca_path /secrets/ca.crt \
             -ssl_cert_path /secrets/client.crt \
             -ssl_private_key_path /secrets/client.key \
             --ssl_insecure_skip_verify=true \
@@ -180,7 +161,7 @@ services:
           else
             output=$$(nebula-console -addr graphd -port 9669 -u root -p nebula \ 
               -enable_ssl=true \
-              -ssl_root_ca_path /secrets/root.crt \
+              -ssl_root_ca_path /secrets/ca.crt \
               -ssl_cert_path /secrets/client.crt \
               -ssl_private_key_path /secrets/client.key \
               --ssl_insecure_skip_verify=true \

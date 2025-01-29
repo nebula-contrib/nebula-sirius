@@ -17,7 +17,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	rootCAPath := fmt.Sprintf("%s/nebulagraph-light-deployment/secrets/root.crt", wdDir)
+	rootCAPath := fmt.Sprintf("%s/nebulagraph-light-deployment/secrets/ca.crt", wdDir)
 	certPath := fmt.Sprintf("%s/nebulagraph-light-deployment/secrets/client.crt", wdDir)
 	privateKeyPath := fmt.Sprintf("%s/nebulagraph-light-deployment/secrets/client.key", wdDir)
 
