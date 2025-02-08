@@ -1,4 +1,4 @@
-.PHONY: download-thrift-files, generate-from-contracts, fmt, lint, unit, docker-compose-up, docker-compose-down
+.PHONY: download-thrift-files, generate-from-contracts, fmt, lint, unit, docker-compose-up, docker-compose-down, install-mockery, generate-mocks, generate-mock-thrift-transport, clean-mocks
 
 fmt:
 	go fmt ./...
@@ -71,4 +71,29 @@ generate-from-contracts:
 
 ########################################################################
 #######  END: APACHE THRIFT CODE GENERATION PART
+########################################################################
+
+
+########################################################################
+#######  BEGIN: MOCK GENERATION PART
+########################################################################
+# Install mockery if not already installed
+install-mockery:
+		GOBIN=$(go env GOPATH)/bin go install github.com/vektra/mockery/v2@latest
+
+# Generate mocks for all interfaces
+generate-mocks: install-mockery
+		$(go env GOPATH)/bin/mockery --all --recursive --output=./mocks --case=underscore
+
+# Generate mock for specific interface thrift.TTransport
+generate-mock-thrift-transport: install-mockery
+		$(go env GOPATH)/bin/mockery --name=TTransport --dir=$(go env GOPATH)/pkg/mod/github.com/apache/thrift@v0.21.0/lib/go/thrift --output=./mocks --case=underscore
+
+# Clean generated mocks
+clean-mocks:
+		rm -rf ./mocks
+
+# Add other targets as needed
+########################################################################
+#######  END: MOCK GENERATION PART
 ########################################################################

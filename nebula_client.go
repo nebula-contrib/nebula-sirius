@@ -57,9 +57,9 @@ type NebulaClientConfig struct {
 // NebulaClientConfig and logs errors and other information using the specified Logger.
 type WrappedNebulaClient struct {
 	clientName    string
-	graphClient   *graph.GraphServiceClient
-	metaClient    *meta.MetaServiceClient
-	storageClient *storage.GraphStorageServiceClient
+	graphClient   graph.GraphService
+	metaClient    meta.MetaService
+	storageClient storage.GraphStorageService
 	transport     thrift.TTransport
 	clientCfg     NebulaClientConfig
 	log           Logger
@@ -75,9 +75,9 @@ type WrappedNebulaClient struct {
 // The logger will be used to log any errors that occur while creating or using
 // the client instances.
 func newWrappedNebulaClient(
-	graphClient *graph.GraphServiceClient,
-	storageClient *storage.GraphStorageServiceClient,
-	metaClient *meta.MetaServiceClient,
+	graphClient graph.GraphService,
+	storageClient storage.GraphStorageService,
+	metaClient meta.MetaService,
 	transport thrift.TTransport,
 	clientName string,
 	log Logger,
@@ -114,7 +114,7 @@ func (wc *WrappedNebulaClient) GetTransport() thrift.TTransport {
 }
 
 // GraphClient returns the graph client
-func (wc *WrappedNebulaClient) GraphClient() (*graph.GraphServiceClient, error) {
+func (wc *WrappedNebulaClient) GraphClient() (graph.GraphService, error) {
 	if err := wc.openTransportIfNeeded(); err != nil {
 		wc.log.Error(fmt.Sprintf("[%s] - %v", wc.clientName, err))
 		return nil, err
@@ -125,7 +125,7 @@ func (wc *WrappedNebulaClient) GraphClient() (*graph.GraphServiceClient, error) 
 }
 
 // MetaClient returns the meta client
-func (wc *WrappedNebulaClient) MetaClient() (*meta.MetaServiceClient, error) {
+func (wc *WrappedNebulaClient) MetaClient() (meta.MetaService, error) {
 	if err := wc.openTransportIfNeeded(); err != nil {
 		wc.log.Error(fmt.Sprintf("[%s] - %v", wc.clientName, err))
 		return nil, err
@@ -136,7 +136,7 @@ func (wc *WrappedNebulaClient) MetaClient() (*meta.MetaServiceClient, error) {
 }
 
 // StorageClient returns the storage client
-func (wc *WrappedNebulaClient) StorageClient() (*storage.GraphStorageServiceClient, error) {
+func (wc *WrappedNebulaClient) StorageClient() (storage.GraphStorageService, error) {
 	if err := wc.openTransportIfNeeded(); err != nil {
 		wc.log.Error(fmt.Sprintf("[%s] - %v", wc.clientName, err))
 		return nil, err
@@ -152,6 +152,7 @@ func (c *WrappedNebulaClient) verifyClientVersion(ctx context.Context) error {
 	if c.clientCfg.HandshakeKey != "" {
 		req.Version = []byte(c.clientCfg.HandshakeKey)
 	}
+
 	resp, err := c.graphClient.VerifyClientVersion(ctx, req)
 	if err != nil {
 		c.log.Error(fmt.Sprintf("[%s] - error: %v", c.clientName, err))
