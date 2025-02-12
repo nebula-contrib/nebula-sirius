@@ -11,6 +11,17 @@ Nebula Go SDK is a Go library that provides a simple and efficient way to intera
 
 In many applications, interacting with the Nebula Graph database can be complex. Nebula Go SDK simplifies this process by providing a standardized way to connect to Nebula Graph, execute queries, and retrieve results. This library is particularly useful in building applications that need to interact with the Nebula Graph database.
 
+**What makes current project different from [nebula-go](https://github.com/vesoft-inc/nebula-go)**
+----------------------------
+
+The motivation behind creating a new client SDK for the Nebula Graph database is as follows:
+
+- **Robust Connection Pooling**: Current resource management is done poorly in the current [nebula-go](https://github.com/vesoft-inc/nebula-go), which is written in a scratch way. Nebula Go SDK introduces connection pooling for robust resource management via library, [go-commons-pool](https://github.com/jolestar/go-commons-pool).
+- **Context Cancellation**: Better control over requests and handling graceful shutdowns, which is a missing feature in the current nebula-go. Nebula Go SDK supports context cancellation for improved request handling.
+- **Utilization of different code-generator**: Utilized [apache/thrift](https://github.com/apache/thrift) for code generation, which is more feature rich than the current nebula-go's code-generator which is [vesoft-inc/fbthrift](https://github.com/vesoft-inc/fbthrift).
+
+_To bring these features into nebula-go would cause breaking changes, which is critical for projects that currently rely on it. Therefore, we decided to re-write it with a different name, **nebula-go-sdk**, and release it._
+
 **Installation**
 ---------------
 
