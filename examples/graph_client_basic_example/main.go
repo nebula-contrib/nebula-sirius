@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
-	nebula_sirius "github.com/egasimov/nebula-sirius"
-	"github.com/egasimov/nebula-sirius/nebula"
-	nebulagraph_light_deployment "github.com/egasimov/nebula-sirius/nebulagraph-light-deployment"
 	"github.com/jolestar/go-commons-pool"
+	nebula_sirius "github.com/nebula-contrib/nebula-sirius"
+	"github.com/nebula-contrib/nebula-sirius/nebula"
+	nebulagraph_light_deployment "github.com/nebula-contrib/nebula-sirius/nebulagraph-light-deployment"
 	"log"
 )
 

@@ -2,8 +2,8 @@ package nebula_sirius
 
 import (
 	"fmt"
-	"github.com/egasimov/nebula-sirius/nebula"
-	"github.com/egasimov/nebula-sirius/nebula/graph"
+	"github.com/nebula-contrib/nebula-sirius/nebula"
+	"github.com/nebula-contrib/nebula-sirius/nebula/graph"
 	"github.com/stretchr/testify/assert"
 	"sort"
 	"testing"

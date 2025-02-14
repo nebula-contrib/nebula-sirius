@@ -11,7 +11,7 @@ package nebula_sirius
 
 import (
 	"fmt"
-	"github.com/egasimov/nebula-sirius/nebula"
+	"github.com/nebula-contrib/nebula-sirius/nebula"
 	"sort"
 	"strconv"
 	"strings"

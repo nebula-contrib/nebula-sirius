@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	storage "github.com/egasimov/nebula-sirius/nebula/storage"
+	storage "github.com/nebula-contrib/nebula-sirius/nebula/storage"
 	mock "github.com/stretchr/testify/mock"
 )
 
