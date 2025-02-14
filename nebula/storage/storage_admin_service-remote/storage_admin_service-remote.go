@@ -13,9 +13,9 @@ import (
 	"strconv"
 	"strings"
 	thrift "github.com/apache/thrift/lib/go/thrift"
-	"github.com/egasimov/nebula-go-sdk/nebula"
-	"github.com/egasimov/nebula-go-sdk/nebula/meta"
-	"github.com/egasimov/nebula-go-sdk/nebula/storage"
+	"github.com/egasimov/nebula-sirius/nebula"
+	"github.com/egasimov/nebula-sirius/nebula/meta"
+	"github.com/egasimov/nebula-sirius/nebula/storage"
 )
 
 var _ = nebula.GoUnusedProtection__

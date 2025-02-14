@@ -1,4 +1,4 @@
-package nebula_go_sdk
+package nebula_sirius
 
 import (
 	"crypto/tls"

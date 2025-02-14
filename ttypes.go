@@ -7,7 +7,7 @@
  * This file contents is copied from vesoft-inc/nebula-go library, make necessary changes
  */
 
-package nebula_go_sdk
+package nebula_sirius
 
 type HostAddress struct {
 	Host string

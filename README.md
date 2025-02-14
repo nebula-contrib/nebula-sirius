@@ -1,40 +1,40 @@
-**Nebula Go SDK**
+**nebula-sirius**
 =====================
 
-**What is Nebula Go SDK?**
+**What is nebula-sirius?**
 ----------------------------
 
-Nebula Go SDK is a Go library that provides a simple and efficient way to interact with the Nebula Graph database. It allows you to connect to Nebula Graph, execute queries, and retrieve results.
+_**nebula-sirius**_ is a Go library that provides a simple and efficient way to interact with the Nebula Graph database. It allows you to connect to Nebula Graph, execute queries, and retrieve results.
 
-**Why do we need Nebula Go SDK?**
+**Why do we need nebula-sirius?**
 --------------------------------------
 
-In many applications, interacting with the Nebula Graph database can be complex. Nebula Go SDK simplifies this process by providing a standardized way to connect to Nebula Graph, execute queries, and retrieve results. This library is particularly useful in building applications that need to interact with the Nebula Graph database.
+In many applications, interacting with the Nebula Graph database can be complex. nebula-sirius simplifies this process by providing a standardized way to connect to Nebula Graph, execute queries, and retrieve results. This library is particularly useful in building applications that need to interact with the Nebula Graph database.
 
 **What makes current project different from [nebula-go](https://github.com/vesoft-inc/nebula-go)**
 ----------------------------
 
 The motivation behind creating a new client SDK for the Nebula Graph database is as follows:
 
-- **Robust Connection Pooling**: Current resource management is done poorly in the current [nebula-go](https://github.com/vesoft-inc/nebula-go), which is written in a scratch way. Nebula Go SDK introduces connection pooling for robust resource management via library, [go-commons-pool](https://github.com/jolestar/go-commons-pool).
-- **Context Cancellation**: Better control over requests and handling graceful shutdowns, which is a missing feature in the current nebula-go. Nebula Go SDK supports context cancellation for improved request handling.
+- **Robust Connection Pooling**: Current resource management is done poorly in the current [nebula-go](https://github.com/vesoft-inc/nebula-go), which is written in a scratch way. nebula-sirius introduces connection pooling for robust resource management via library, [go-commons-pool](https://github.com/jolestar/go-commons-pool).
+- **Context Cancellation**: Better control over requests and handling graceful shutdowns, which is a missing feature in the current nebula-go. nebula-sirius supports context cancellation for improved request handling.
 - **Utilization of different code-generator**: Utilized [apache/thrift](https://github.com/apache/thrift) for code generation, which is more feature rich than the current nebula-go's code-generator which is [vesoft-inc/fbthrift](https://github.com/vesoft-inc/fbthrift).
 
-_To bring these features into nebula-go would cause breaking changes, which is critical for projects that currently rely on it. Therefore, we decided to re-write it with a different name, **nebula-go-sdk**, and release it._
+_To bring these features into nebula-go would cause breaking changes, which is critical for projects that currently rely on it. Therefore, we decided to re-write it with a different name, **nebula-sirius**, and release it._
 
 **Installation**
 ---------------
 
-To install Nebula Go SDK into your project, use the following command:
+To install nebula-sirius into your project, use the following command:
 
 ```bash
-go get github.com/egasimov/nebula-go-sdk
+go get github.com/egasimov/nebula-sirius
 ```
 
 **Usage**
 ---------
 
-To use Nebula Go SDK, simply import the library and create a new instance of the `GraphClient` struct.
+To use nebula-sirius, simply import the library and create a new instance of the `GraphClient` struct.
 
 
 
@@ -47,14 +47,14 @@ Here is the restructured Usage section with multiple code snippets for easier un
 First, we need to configure the Nebula Client Factory with the provided configuration.
 
 ```go
-clientFactory := nebula_go_sdk.NewNebulaClientFactory(
-	&nebula_go_sdk.NebulaClientConfig{
-		HostAddress: nebula_go_sdk.HostAddress{
+clientFactory := nebula_sirius.NewNebulaClientFactory(
+	&nebula_sirius.NebulaClientConfig{
+		HostAddress: nebula_sirius.HostAddress{
 			Host: nebulagraph_light_deployment.HostGraphD,
 			Port: nebulagraph_light_deployment.PortGraphD,
 		},
 	},
-	nebula_go_sdk.DefaultLogger{},
+	nebula_sirius.DefaultLogger{},
 )
 ```
 
@@ -128,7 +128,7 @@ if err != nil || a1.GetErrorCode() != nebula.ErrorCode_SUCCEEDED{
 We print the result set of the query.
 
 ```go
-log.Println(nebula_go_sdk.GenResultSet(a1))
+log.Println(nebula_sirius.GenResultSet(a1))
 ```
 
 **Examples**
@@ -138,7 +138,7 @@ You may refer the working samples located under [examples](./examples) folder.
 **Contribution**
 --------------
 
-We welcome contributions to Nebula Go SDK. If you're interested in contributing, please follow these steps:
+We welcome contributions to nebula-sirius. If you're interested in contributing, please follow these steps:
 
 1. Fork the repository on GitHub.
 2. Create a new branch for your feature or bug fix.
@@ -152,7 +152,7 @@ Note
 This project includes code copied and pasted from the Nebula Go repository (https://github.com/vesoft-inc/nebula-go). The original code is licensed under the Apache License 2.0, and we acknowledge the original authors of this code.
 
 
-Nebula Go SDK is released under the Apache 2.0 License.
+nebula-sirius is released under the Apache 2.0 License.
 
 **Code of Conduct**
 ------------------
@@ -162,6 +162,6 @@ We follow the Go community's Code of Conduct. Please read it before contributing
 **Support**
 ----------
 
-If you have any questions or need help with Nebula Go SDK, please open an issue on GitHub.
+If you have any questions or need help with nebula-sirius, please open an issue on GitHub.
 
-**Thank you for using Nebula Go SDK!**
+**Thank you for using nebula-sirius!**

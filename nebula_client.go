@@ -15,17 +15,17 @@
  * limitations under the License.
  */
 
-package nebula_go_sdk
+package nebula_sirius
 
 import (
 	"context"
 	"crypto/tls"
 	"fmt"
 	"github.com/apache/thrift/lib/go/thrift"
-	"github.com/egasimov/nebula-go-sdk/nebula"
-	"github.com/egasimov/nebula-go-sdk/nebula/graph"
-	"github.com/egasimov/nebula-go-sdk/nebula/meta"
-	"github.com/egasimov/nebula-go-sdk/nebula/storage"
+	"github.com/egasimov/nebula-sirius/nebula"
+	"github.com/egasimov/nebula-sirius/nebula/graph"
+	"github.com/egasimov/nebula-sirius/nebula/meta"
+	"github.com/egasimov/nebula-sirius/nebula/storage"
 	"net/http"
 	"time"
 )

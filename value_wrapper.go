@@ -7,11 +7,11 @@
  * This file contents is copied from vesoft-inc/nebula-go library, make necessary changes
  */
 
-package nebula_go_sdk
+package nebula_sirius
 
 import (
 	"fmt"
-	"github.com/egasimov/nebula-go-sdk/nebula"
+	"github.com/egasimov/nebula-sirius/nebula"
 	"sort"
 	"strconv"
 	"strings"

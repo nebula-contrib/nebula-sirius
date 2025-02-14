@@ -1,10 +1,10 @@
-package nebula_go_sdk
+package nebula_sirius
 
 import (
 	"context"
 	"testing"
 
-	"github.com/egasimov/nebula-go-sdk/mocks"
+	"github.com/egasimov/nebula-sirius/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )

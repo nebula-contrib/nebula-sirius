@@ -7,15 +7,15 @@
  * This file contents is copied from vesoft-inc/nebula-go library, make necessary changes
  */
 
-package nebula_go_sdk
+package nebula_sirius
 
 import (
 	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/egasimov/nebula-go-sdk/nebula"
-	"github.com/egasimov/nebula-go-sdk/nebula/graph"
+	"github.com/egasimov/nebula-sirius/nebula"
+	"github.com/egasimov/nebula-sirius/nebula/graph"
 	"reflect"
 	"regexp"
 	"slices"

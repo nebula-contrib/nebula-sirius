@@ -7,7 +7,7 @@
  * This file contents is copied from vesoft-inc/nebula-go library, make necessary changes
  */
 
-package nebula_go_sdk
+package nebula_sirius
 
 import (
 	"github.com/stretchr/testify/assert"

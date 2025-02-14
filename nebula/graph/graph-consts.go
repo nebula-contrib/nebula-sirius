@@ -12,7 +12,7 @@ import (
 	thrift "github.com/apache/thrift/lib/go/thrift"
 	"strings"
 	"regexp"
-	"github.com/egasimov/nebula-go-sdk/nebula"
+	"github.com/egasimov/nebula-sirius/nebula"
 
 )
 

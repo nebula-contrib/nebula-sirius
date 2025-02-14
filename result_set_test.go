@@ -1,9 +1,9 @@
-package nebula_go_sdk
+package nebula_sirius
 
 import (
 	"fmt"
-	"github.com/egasimov/nebula-go-sdk/nebula"
-	"github.com/egasimov/nebula-go-sdk/nebula/graph"
+	"github.com/egasimov/nebula-sirius/nebula"
+	"github.com/egasimov/nebula-sirius/nebula/graph"
 	"github.com/stretchr/testify/assert"
 	"sort"
 	"testing"

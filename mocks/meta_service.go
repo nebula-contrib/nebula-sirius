@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	meta "github.com/egasimov/nebula-go-sdk/nebula/meta"
+	meta "github.com/egasimov/nebula-sirius/nebula/meta"
 	mock "github.com/stretchr/testify/mock"
 )
 

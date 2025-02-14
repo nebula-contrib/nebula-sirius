@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/egasimov/nebula-go-sdk"
-	"github.com/egasimov/nebula-go-sdk/nebula"
-	nebulagraph_light_deployment "github.com/egasimov/nebula-go-sdk/nebulagraph-light-deployment"
+	nebula_sirius "github.com/egasimov/nebula-sirius"
+	"github.com/egasimov/nebula-sirius/nebula"
+	nebulagraph_light_deployment "github.com/egasimov/nebula-sirius/nebulagraph-light-deployment"
 	"github.com/jolestar/go-commons-pool"
 	"log"
 )
@@ -14,15 +14,15 @@ func main() {
 	ctx := context.Background()
 
 	// Configure ClientFactory that serves creation of nebula clients based on the provided configuration
-	clientFactory := nebula_go_sdk.NewNebulaClientFactory(
-		&nebula_go_sdk.NebulaClientConfig{
-			HostAddress: nebula_go_sdk.HostAddress{
+	clientFactory := nebula_sirius.NewNebulaClientFactory(
+		&nebula_sirius.NebulaClientConfig{
+			HostAddress: nebula_sirius.HostAddress{
 				Host: nebulagraph_light_deployment.HostGraphD,
 				Port: nebulagraph_light_deployment.PortGraphD,
 			},
 		},
-		nebula_go_sdk.DefaultLogger{},
-		nebula_go_sdk.DefaultClientNameGenerator,
+		nebula_sirius.DefaultLogger{},
+		nebula_sirius.DefaultClientNameGenerator,
 	)
 
 	// Build a pool of nebula clients based on clientFactory and poolConfig
@@ -50,7 +50,7 @@ func main() {
 		}
 	}(nebulaClientPool, ctx, clientObj)
 
-	client := clientObj.(*nebula_go_sdk.WrappedNebulaClient)
+	client := clientObj.(*nebula_sirius.WrappedNebulaClient)
 
 	// Use the client...
 	log.Println(fmt.Sprintf("Got a Thrift client with name: %s %v", client.GetClientName(), client))
@@ -80,6 +80,6 @@ func main() {
 		log.Fatalf("Error executing query via graph client: %v %s", err, a1.ErrorMsg)
 	}
 
-	log.Println(nebula_go_sdk.GenResultSet(a1))
+	log.Println(nebula_sirius.GenResultSet(a1))
 
 }
