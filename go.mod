@@ -1,4 +1,4 @@
-module github.com/egasimov/nebula-sirius
+module github.com/nebula-contrib/nebula-sirius
 
 go 1.23
 

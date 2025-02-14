@@ -13,8 +13,8 @@ import (
 	"strconv"
 	"strings"
 	thrift "github.com/apache/thrift/lib/go/thrift"
-	"github.com/egasimov/nebula-sirius/nebula"
-	"github.com/egasimov/nebula-sirius/nebula/graph"
+	"github.com/nebula-contrib/nebula-sirius/nebula"
+	"github.com/nebula-contrib/nebula-sirius/nebula/graph"
 )
 
 var _ = nebula.GoUnusedProtection__

@@ -28,7 +28,7 @@ _To bring these features into nebula-go would cause breaking changes, which is c
 To install nebula-sirius into your project, use the following command:
 
 ```bash
-go get github.com/egasimov/nebula-sirius
+go get github.com/nebula-contrib/nebula-sirius
 ```
 
 **Usage**
