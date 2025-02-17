@@ -26,3 +26,5 @@ go.work.sum
 .env
 .DS_Store
 nebulagraph-light-deployment/data/*
+
+schema-scripts
