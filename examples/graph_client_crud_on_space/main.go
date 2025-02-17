@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/jolestar/go-commons-pool"
+	nebula_sirius "github.com/nebula-contrib/nebula-sirius"
 	"github.com/nebula-contrib/nebula-sirius/nebula"
 	nebulagraph_light_deployment "github.com/nebula-contrib/nebula-sirius/nebulagraph-light-deployment"
 	"log"
