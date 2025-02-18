@@ -13,10 +13,3 @@ const (
 	ErrorTagNotFound  = "TagNotFound: Tag not existed!"
 	ErrorEdgeNotFound = "EdgeNotFound: Edge not existed!"
 )
-
-// Go tags representing Nebula related customizations
-const (
-	VID_GO_TAG               = "nebula_vid"
-	NEBULA_FIELD_GO_TAG      = "nebula_field"
-	NEBULA_FIELD_TYPE_GO_TAG = "nebula_field_type"
-)
