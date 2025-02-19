@@ -2,7 +2,6 @@ package statement
 
 import (
 	"fmt"
-	"github.com/nebula-contrib/nebula-sirius"
 	"maps"
 	"reflect"
 	"slices"
@@ -119,7 +118,7 @@ func GenerateInsertVertexStatement(vertices []IInsertableVertex) (string, error)
 		case reflect.Pointer:
 			vidFieldValue = fmt.Sprintf("%v", vidField.Elem())
 		default:
-			return "", fmt.Errorf(fmt.Sprintf("`%s` tagged field of struct is either nil or not supported", nebula_sirius.VID_GO_TAG))
+			return "", fmt.Errorf(fmt.Sprintf("`%s` tagged field of struct is either nil or not supported", VID_GO_TAG))
 		}
 
 		var values []string
@@ -138,7 +137,7 @@ func GenerateInsertVertexStatement(vertices []IInsertableVertex) (string, error)
 			switch structFieldVal.Kind() {
 			case reflect.String:
 				{
-					switch structField.Tag.Get(nebula_sirius.NEBULA_FIELD_TYPE_GO_TAG) {
+					switch structField.Tag.Get(NEBULA_FIELD_TYPE_GO_TAG) {
 					case "date":
 						//		 date("2025-02-15"),
 						values = append(values, fmt.Sprintf("date(\"%v\")", structFieldVal))
@@ -222,13 +221,13 @@ func readThroughCache(structName string, vertexType reflect.Type) (nebulaInfoPer
 		fieldCount := vertexType.NumField()
 		for i := 0; i < fieldCount; i++ {
 			structField := vertexType.Field(i)
-			nebulaField := structField.Tag.Get(nebula_sirius.NEBULA_FIELD_GO_TAG)
+			nebulaField := structField.Tag.Get(NEBULA_FIELD_GO_TAG)
 			if nebulaField != "" {
 				nebulaFieldAndStructFieldMap[nebulaField] = structField
 			}
 
 			// Is it VID field?
-			if structField.Tag.Get(nebula_sirius.VID_GO_TAG) != "" {
+			if structField.Tag.Get(VID_GO_TAG) != "" {
 				nebulaVidStructField = structField
 			}
 		}
@@ -249,76 +248,4 @@ func readThroughCache(structName string, vertexType reflect.Type) (nebulaInfoPer
 	}
 
 	return result.(nebulaInfoPerStruct), nil
-}
-
-// DeleteVertexStatement is a struct that stores the vertex IDs and whether to delete the edges associated to vertices
-type DeleteVertexStatement[TVidType string | int64] struct {
-	VertexIds []TVidType
-	WithEdge  bool
-}
-
-// GenerateDeleteVertexStatement takes a slice of struct vertices and generates the corresponding
-// to DELETE VERTEX scripts
-func GenerateDeleteVertexStatement[TVidType string | int64](statement DeleteVertexStatement[TVidType]) (string, error) {
-	if len(statement.VertexIds) == 0 {
-		return "", fmt.Errorf("empty VertexIds provided ")
-	}
-
-	var sb strings.Builder
-
-	sb.WriteString("DELETE VERTEX ")
-
-	// DELETE VERTEX <vid> [, <vid> ...] [WITH EDGE];
-	var vidsJoined string
-	for i, item := range statement.VertexIds {
-		if i > 0 {
-			vidsJoined += ", "
-		}
-
-		switch reflect.TypeOf(item).Kind() {
-		case reflect.String:
-			vidsJoined += fmt.Sprintf(`"%v"`, item)
-		case reflect.Int64:
-			vidsJoined += fmt.Sprintf(`%v`, item)
-		default:
-			return "", fmt.Errorf("unsupported type")
-		}
-	}
-
-	sb.WriteString(vidsJoined)
-
-	if statement.WithEdge {
-		sb.WriteString(" WITH EDGE;")
-	} else {
-		sb.WriteString(";")
-	}
-
-	return sb.String(), nil
-}
-
-// GenerateBatchedDeleteVertexStatements takes a slice of struct vertices and generates the corresponding
-// to DELETE VERTEX scripts separated by semicolons. The function takes an additional parameter batchSize
-// which specifies the number of vertices to process in each batch.
-func GenerateBatchedDeleteVertexStatements[TVidType string | int64](statement DeleteVertexStatement[TVidType], batchSize int) ([]string, error) {
-	scripts := make([]string, 0)
-	for i := 0; i < len(statement.VertexIds); i = i + batchSize {
-		st := i
-		end := i + batchSize
-		if end > len(statement.VertexIds) {
-			end = len(statement.VertexIds)
-		}
-
-		newStatement := DeleteVertexStatement[TVidType]{
-			VertexIds: statement.VertexIds[st:end],
-			WithEdge:  statement.WithEdge,
-		}
-
-		script, err := GenerateDeleteVertexStatement(newStatement)
-		if err != nil {
-			return nil, err
-		}
-		scripts = append(scripts, script)
-	}
-
-	return scripts, nil
 }
