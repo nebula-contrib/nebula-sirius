@@ -1,12 +1,13 @@
-package statement
+package edge_insert
 
 import (
 	"fmt"
+	"github.com/nebula-contrib/nebula-sirius/statement"
 	"sort"
 	"strings"
 )
 
-type InsertEdgeStatement[TVidType VidType] struct {
+type InsertEdgeStatement[TVidType statement.VidType] struct {
 	SourceVid   TVidType
 	TargetVid   TVidType
 	Properties  map[string]interface{}
@@ -15,7 +16,7 @@ type InsertEdgeStatement[TVidType VidType] struct {
 	IfNotExists bool
 }
 
-type InsertEdgeStatementOption[TVidType VidType] func(*InsertEdgeStatement[TVidType])
+type InsertEdgeStatementOption[TVidType statement.VidType] func(*InsertEdgeStatement[TVidType])
 
 // NewInsertEdgeStatement creates a new InsertEdgeStatement with the given source
 // vertex ID, target vertex ID, and edge type. It also allows for additional configuration
@@ -32,7 +33,7 @@ type InsertEdgeStatementOption[TVidType VidType] func(*InsertEdgeStatement[TVidT
 // Returns:
 //
 //	An initialized InsertEdgeStatement configured with the provided parameters and options.
-func NewInsertEdgeStatement[TVidType VidType](sourceVid, targetVid TVidType, edgeType string, options ...InsertEdgeStatementOption[TVidType]) InsertEdgeStatement[TVidType] {
+func NewInsertEdgeStatement[TVidType statement.VidType](sourceVid, targetVid TVidType, edgeType string, options ...InsertEdgeStatementOption[TVidType]) InsertEdgeStatement[TVidType] {
 	statement := InsertEdgeStatement[TVidType]{
 		SourceVid:   sourceVid,
 		TargetVid:   targetVid,
@@ -50,21 +51,21 @@ func NewInsertEdgeStatement[TVidType VidType](sourceVid, targetVid TVidType, edg
 }
 
 // WithRank sets the rank of the InsertEdgeStatement to the provided value.
-func WithRank[TVidType VidType](rank int) func(*InsertEdgeStatement[TVidType]) {
+func WithRank[TVidType statement.VidType](rank int) func(*InsertEdgeStatement[TVidType]) {
 	return func(stmt *InsertEdgeStatement[TVidType]) {
 		stmt.Rank = rank
 	}
 }
 
 // WithProperties sets the properties map of the InsertEdgeStatement to the provided map.
-func WithProperties[TVidType VidType](properties map[string]interface{}) func(*InsertEdgeStatement[TVidType]) {
+func WithProperties[TVidType statement.VidType](properties map[string]interface{}) func(*InsertEdgeStatement[TVidType]) {
 	return func(stmt *InsertEdgeStatement[TVidType]) {
 		stmt.Properties = properties
 	}
 }
 
 // WithIfNotExists sets the IfNotExists flag of the InsertEdgeStatement to the provided value.
-func WithIfNotExists[TVidType VidType](ifNotExists bool) func(*InsertEdgeStatement[TVidType]) {
+func WithIfNotExists[TVidType statement.VidType](ifNotExists bool) func(*InsertEdgeStatement[TVidType]) {
 	return func(stmt *InsertEdgeStatement[TVidType]) {
 		stmt.IfNotExists = ifNotExists
 	}
@@ -74,24 +75,24 @@ func WithIfNotExists[TVidType VidType](ifNotExists bool) func(*InsertEdgeStateme
 // The function constructs the INSERT EDGE statement with the provided source and target vertex IDs,
 // edge type, rank, properties, and IfNotExists flag. It encodes the vertex IDs and properties
 // into the appropriate format and returns the resulting string.
-func GenerateInsertEdgeStatement[TVidType VidType](statement InsertEdgeStatement[TVidType]) (string, error) {
+func GenerateInsertEdgeStatement[TVidType statement.VidType](input InsertEdgeStatement[TVidType]) (string, error) {
 	var sb strings.Builder
 
-	if statement.IfNotExists {
+	if input.IfNotExists {
 		sb.WriteString(`INSERT EDGE IF NOT EXISTS `)
 	} else {
 		sb.WriteString(`INSERT EDGE `)
 	}
 
-	sb.WriteString(fmt.Sprintf(`%s`, statement.EdgeType))
+	sb.WriteString(fmt.Sprintf(`%s`, input.EdgeType))
 
-	sortedProperties := make([]string, 0, len(statement.Properties))
-	for k, _ := range statement.Properties {
+	sortedProperties := make([]string, 0, len(input.Properties))
+	for k, _ := range input.Properties {
 		sortedProperties = append(sortedProperties, k)
 	}
 	sort.Strings(sortedProperties)
 
-	if statement.Properties == nil || len(statement.Properties) == 0 {
+	if input.Properties == nil || len(input.Properties) == 0 {
 		sb.WriteString(` () `)
 	} else {
 		sb.WriteString(` (`)
@@ -104,19 +105,19 @@ func GenerateInsertEdgeStatement[TVidType VidType](statement InsertEdgeStatement
 		sb.WriteString(`) `)
 	}
 
-	sourceVidValue, err := encodeVidFieldValueAsStr(statement.SourceVid)
+	sourceVidValue, err := statement.EncodeVidFieldValueAsStr(input.SourceVid)
 	if err != nil {
 		return "", err
 	}
 
-	targetVidValue, err := encodeVidFieldValueAsStr(statement.TargetVid)
+	targetVidValue, err := statement.EncodeVidFieldValueAsStr(input.TargetVid)
 	if err != nil {
 		return "", err
 	}
 
-	sb.WriteString(fmt.Sprintf(`VALUES %s->%s@%d:`, sourceVidValue, targetVidValue, statement.Rank))
+	sb.WriteString(fmt.Sprintf(`VALUES %s->%s@%d:`, sourceVidValue, targetVidValue, input.Rank))
 
-	if statement.Properties == nil || len(statement.Properties) == 0 {
+	if input.Properties == nil || len(input.Properties) == 0 {
 		sb.WriteString(`()`)
 	} else {
 		sb.WriteString(`(`)
@@ -124,7 +125,7 @@ func GenerateInsertEdgeStatement[TVidType VidType](statement InsertEdgeStatement
 			if i > 0 {
 				sb.WriteString(`,`)
 			}
-			encodedVal, err := encodeNebulaFieldValue(statement.Properties[key])
+			encodedVal, err := statement.EncodeNebulaFieldValue(input.Properties[key])
 			if err != nil {
 				return "", err
 			}

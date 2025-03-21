@@ -1,7 +1,8 @@
-package statement
+package vertex_insert
 
 import (
 	"fmt"
+	"github.com/nebula-contrib/nebula-sirius/statement"
 	"maps"
 	"reflect"
 	"slices"
@@ -118,7 +119,7 @@ func GenerateInsertVertexStatement(vertices []IInsertableVertex) (string, error)
 		case reflect.Pointer:
 			vidFieldValue = fmt.Sprintf("%v", vidField.Elem())
 		default:
-			return "", fmt.Errorf(fmt.Sprintf("`%s` tagged field of struct is either nil or not supported", VID_GO_TAG))
+			return "", fmt.Errorf(fmt.Sprintf("`%s` tagged field of struct is either nil or not supported", statement.VID_GO_TAG))
 		}
 
 		var values []string
@@ -137,7 +138,7 @@ func GenerateInsertVertexStatement(vertices []IInsertableVertex) (string, error)
 			switch structFieldVal.Kind() {
 			case reflect.String:
 				{
-					switch structField.Tag.Get(NEBULA_FIELD_TYPE_GO_TAG) {
+					switch structField.Tag.Get(statement.NEBULA_FIELD_TYPE_GO_TAG) {
 					case "date":
 						//		 date("2025-02-15"),
 						values = append(values, fmt.Sprintf("date(\"%v\")", structFieldVal))
@@ -221,13 +222,13 @@ func readThroughCache(structName string, vertexType reflect.Type) (nebulaInfoPer
 		fieldCount := vertexType.NumField()
 		for i := 0; i < fieldCount; i++ {
 			structField := vertexType.Field(i)
-			nebulaField := structField.Tag.Get(NEBULA_FIELD_GO_TAG)
+			nebulaField := structField.Tag.Get(statement.NEBULA_FIELD_GO_TAG)
 			if nebulaField != "" {
 				nebulaFieldAndStructFieldMap[nebulaField] = structField
 			}
 
 			// Is it VID field?
-			if structField.Tag.Get(VID_GO_TAG) != "" {
+			if structField.Tag.Get(statement.VID_GO_TAG) != "" {
 				nebulaVidStructField = structField
 			}
 		}

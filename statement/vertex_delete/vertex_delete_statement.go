@@ -1,21 +1,22 @@
-package statement
+package vertex_delete
 
 import (
 	"fmt"
+	"github.com/nebula-contrib/nebula-sirius/statement"
 	"reflect"
 	"strings"
 )
 
 // DeleteVertexStatement is a struct that stores the vertex IDs and whether to delete the edges associated to vertices
-type DeleteVertexStatement[TVidType VidType] struct {
+type DeleteVertexStatement[TVidType statement.VidType] struct {
 	VertexIds []TVidType
 	WithEdge  bool
 }
 
 // GenerateDeleteVertexStatement takes a slice of struct vertices and generates the corresponding
 // to DELETE VERTEX scripts
-func GenerateDeleteVertexStatement[TVidType VidType](statement DeleteVertexStatement[TVidType]) (string, error) {
-	if len(statement.VertexIds) == 0 {
+func GenerateDeleteVertexStatement[TVidType statement.VidType](input DeleteVertexStatement[TVidType]) (string, error) {
+	if len(input.VertexIds) == 0 {
 		return "", fmt.Errorf("empty VertexIds provided ")
 	}
 
@@ -25,7 +26,7 @@ func GenerateDeleteVertexStatement[TVidType VidType](statement DeleteVertexState
 
 	// DELETE VERTEX <vid> [, <vid> ...] [WITH EDGE];
 	var vidsJoined string
-	for i, item := range statement.VertexIds {
+	for i, item := range input.VertexIds {
 		if i > 0 {
 			vidsJoined += ", "
 		}
@@ -42,7 +43,7 @@ func GenerateDeleteVertexStatement[TVidType VidType](statement DeleteVertexState
 
 	sb.WriteString(vidsJoined)
 
-	if statement.WithEdge {
+	if input.WithEdge {
 		sb.WriteString(" WITH EDGE;")
 	} else {
 		sb.WriteString(";")
@@ -54,7 +55,7 @@ func GenerateDeleteVertexStatement[TVidType VidType](statement DeleteVertexState
 // GenerateBatchedDeleteVertexStatements takes a slice of struct vertices and generates the corresponding
 // to DELETE VERTEX scripts separated by semicolons. The function takes an additional parameter batchSize
 // which specifies the number of vertices to process in each batch.
-func GenerateBatchedDeleteVertexStatements[TVidType VidType](statement DeleteVertexStatement[TVidType], batchSize int) ([]string, error) {
+func GenerateBatchedDeleteVertexStatements[TVidType statement.VidType](statement DeleteVertexStatement[TVidType], batchSize int) ([]string, error) {
 	scripts := make([]string, 0)
 	for i := 0; i < len(statement.VertexIds); i = i + batchSize {
 		st := i

@@ -1,6 +1,7 @@
-package statement
+package tests
 
 import (
+	"github.com/nebula-contrib/nebula-sirius/statement/vertex_insert"
 	"reflect"
 	"testing"
 )
@@ -8,7 +9,7 @@ import (
 func TestGenerateInsertVertexStatement(t *testing.T) {
 	testCases := GetTestCasesForGenerateInsertVertexStatement()
 	for _, testcase := range testCases {
-		actual, err := GenerateInsertVertexStatement(testcase.GivenVerticesArray)
+		actual, err := vertex_insert.GenerateInsertVertexStatement(testcase.GivenVerticesArray)
 
 		if err != nil {
 			if !testcase.IsErrExpected {
@@ -33,7 +34,7 @@ func TestGenerateInsertVertexStatement(t *testing.T) {
 func TestGenerateBatchedInsertVertexStatements(t *testing.T) {
 	testCases := GetTestCasesForGenerateBatchedInsertVertexStatements()
 	for _, testcase := range testCases {
-		actual, err := GenerateBatchedInsertVertexStatements(testcase.GivenVerticesArray, testcase.GivenBatchSize)
+		actual, err := vertex_insert.GenerateBatchedInsertVertexStatements(testcase.GivenVerticesArray, testcase.GivenBatchSize)
 
 		if err != nil {
 			if !testcase.IsErrExpected {

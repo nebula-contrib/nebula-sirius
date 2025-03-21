@@ -1,14 +1,15 @@
-package statement
+package tests
 
 import (
+	"github.com/nebula-contrib/nebula-sirius/statement/edge_delete"
 	"reflect"
 	"testing"
 )
 
-func TestGenerateInsertEdgeStatementWhereVidStrings(t *testing.T) {
-	testCases := GetTestCasesForGenerateInsertEdgeStatementWhereVidString()
+func TestGenerateDeleteEdgeStatementWhereVidStrings(t *testing.T) {
+	testCases := GetTestCasesForGenerateDeleteEdgeStatementWhereVidString()
 	for _, testcase := range testCases {
-		actual, err := GenerateInsertEdgeStatement(testcase.Given)
+		actual, err := edge_delete.GenerateDeleteEdgeStatement(testcase.Given)
 
 		if err != nil {
 			if !testcase.IsErrExpected {
@@ -30,10 +31,10 @@ func TestGenerateInsertEdgeStatementWhereVidStrings(t *testing.T) {
 	}
 }
 
-func TestGenerateInsertEdgeStatementWhereVidInt64(t *testing.T) {
-	testCases := GetTestCasesForGenerateInsertEdgeStatementWhereVidInt64()
+func TestGenerateDeleteEdgeStatementWhereVidInt64(t *testing.T) {
+	testCases := GetTestCasesForGenerateDeleteEdgeStatementWhereVidInt64()
 	for _, testcase := range testCases {
-		actual, err := GenerateInsertEdgeStatement(testcase.Given)
+		actual, err := edge_delete.GenerateDeleteEdgeStatement(testcase.Given)
 
 		if err != nil {
 			if !testcase.IsErrExpected {
