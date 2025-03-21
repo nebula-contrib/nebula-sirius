@@ -2,6 +2,22 @@ package statement
 
 import "fmt"
 
+type IEdgeStatementOperation[T VidType] interface {
+	GetSrcVid() T
+	GetDstVid() T
+	GetOperationType() OperationTypeStatement
+	GenerateStatement() (string, error)
+}
+
+type OperationTypeStatement int
+
+const (
+	StatementInsert OperationTypeStatement = iota
+	UpdateStatement
+	DeleteStatement
+	UpsertStatement
+)
+
 type VidType interface {
 	string | int64
 }

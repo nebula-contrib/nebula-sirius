@@ -65,7 +65,7 @@ func GenerateInsertVertexStatement(vertices []IInsertableVertex) (string, error)
 		if v.Elem().Kind() == reflect.Struct {
 			v = v.Elem()
 		} else {
-			return "", fmt.Errorf(fmt.Sprintf("vertex is not a struct: %v", v.Kind()))
+			return "", fmt.Errorf("vertex is not a struct: %v", v.Kind())
 		}
 
 		// Get the type of the first vertex to extract the struct name
@@ -119,7 +119,7 @@ func GenerateInsertVertexStatement(vertices []IInsertableVertex) (string, error)
 		case reflect.Pointer:
 			vidFieldValue = fmt.Sprintf("%v", vidField.Elem())
 		default:
-			return "", fmt.Errorf(fmt.Sprintf("`%s` tagged field of struct is either nil or not supported", statement.VID_GO_TAG))
+			return "", fmt.Errorf("`%s` tagged field of struct is either nil or not supported", statement.VID_GO_TAG)
 		}
 
 		var values []string
@@ -169,7 +169,7 @@ func GenerateInsertVertexStatement(vertices []IInsertableVertex) (string, error)
 			case reflect.Bool:
 				values = append(values, fmt.Sprintf("%v", structFieldVal))
 			default:
-				return "", fmt.Errorf(fmt.Sprintf("field type not supported: %v", structFieldVal.Kind()))
+				return "", fmt.Errorf("field type not supported: %v", structFieldVal.Kind())
 			}
 
 		}
@@ -210,43 +210,39 @@ func GenerateBatchedInsertVertexStatements(vertices []IInsertableVertex, batchSi
 }
 
 func readThroughCache(structName string, vertexType reflect.Type) (nebulaInfoPerStruct, error) {
-	result, ok := cachedNebulaInfoPerStruct.Load(structName)
+	if result, ok := cachedNebulaInfoPerStruct.Load(structName); ok {
+		return result.(nebulaInfoPerStruct), nil
+	}
 
-	if !ok {
-		var nebulaVidStructField reflect.StructField
-		nebulaFieldAndStructFieldMap := make(map[string]reflect.StructField)
+	var nebulaVidStructField reflect.StructField
+	nebulaFieldAndStructFieldMap := make(map[string]reflect.StructField)
 
-		// Collect struct fields corresponding nebula fields into map
-		var nebulaFields []string
+	// Collect struct fields corresponding nebula fields into map
+	var nebulaFields []string
 
-		fieldCount := vertexType.NumField()
-		for i := 0; i < fieldCount; i++ {
-			structField := vertexType.Field(i)
-			nebulaField := structField.Tag.Get(statement.NEBULA_FIELD_GO_TAG)
-			if nebulaField != "" {
-				nebulaFieldAndStructFieldMap[nebulaField] = structField
-			}
-
-			// Is it VID field?
-			if structField.Tag.Get(statement.VID_GO_TAG) != "" {
-				nebulaVidStructField = structField
-			}
+	fieldCount := vertexType.NumField()
+	for i := 0; i < fieldCount; i++ {
+		structField := vertexType.Field(i)
+		nebulaField := structField.Tag.Get(statement.NEBULA_FIELD_GO_TAG)
+		if nebulaField != "" {
+			nebulaFieldAndStructFieldMap[nebulaField] = structField
 		}
-		nebulaFields = slices.Collect(maps.Keys(nebulaFieldAndStructFieldMap))
-		sort.Strings(nebulaFields)
 
-		cachedNebulaInfoPerStruct.Store(structName, nebulaInfoPerStruct{
-			NebulaFieldAndStructFieldMap: nebulaFieldAndStructFieldMap,
-			NebulaFields:                 nebulaFields,
-			VidStructField:               nebulaVidStructField,
-		})
+		// Is it VID field?
+		if structField.Tag.Get(statement.VID_GO_TAG) != "" {
+			nebulaVidStructField = structField
+		}
+	}
+	nebulaFields = slices.Collect(maps.Keys(nebulaFieldAndStructFieldMap))
+	sort.Strings(nebulaFields)
+
+	nebulaInfo := nebulaInfoPerStruct{
+		NebulaFieldAndStructFieldMap: nebulaFieldAndStructFieldMap,
+		NebulaFields:                 nebulaFields,
+		VidStructField:               nebulaVidStructField,
 	}
 
-	// try to read second time
-	result, ok = cachedNebulaInfoPerStruct.Load(structName)
-	if !ok {
-		return nebulaInfoPerStruct{}, fmt.Errorf(fmt.Sprintf("struct not found: %v in the cache", structName))
-	}
+	cachedNebulaInfoPerStruct.Store(structName, nebulaInfo)
 
-	return result.(nebulaInfoPerStruct), nil
+	return nebulaInfo, nil
 }

@@ -3,6 +3,7 @@ package edge_upsert
 import (
 	"fmt"
 	"github.com/nebula-contrib/nebula-sirius/statement"
+	"sort"
 	"strings"
 )
 
@@ -19,6 +20,22 @@ type UpsertEdgeStatement[TVidType statement.VidType] struct {
 
 // UpsertEdgeStatementOption is a function that configures an UpsertEdgeStatement.
 type UpsertEdgeStatementOption[TVidType statement.VidType] func(*UpsertEdgeStatement[TVidType])
+
+func (s UpsertEdgeStatement[TVidType]) GetSrcVid() TVidType {
+	return s.srcVid
+}
+
+func (s UpsertEdgeStatement[TVidType]) GetDstVid() TVidType {
+	return s.dstVid
+}
+
+func (s UpsertEdgeStatement[TVidType]) GetOperationType() statement.OperationTypeStatement {
+	return statement.UpsertStatement
+}
+
+func (s UpsertEdgeStatement[TVidType]) GenerateStatement() (string, error) {
+	return GenerateUpsertEdgeStatement(s)
+}
 
 // NewUpsertEdgeStatement creates a new UpsertEdgeStatement with the given source
 // vertex ID, target vertex ID, edge type, and properties. It also allows for additional configuration
@@ -79,7 +96,7 @@ func WithRank[TVidType statement.VidType](rank int) func(*UpsertEdgeStatement[TV
 // condition and yield into the appropriate format and returns the resulting string.
 func GenerateUpsertEdgeStatement[TVidType statement.VidType](input UpsertEdgeStatement[TVidType]) (string, error) {
 
-	if input.updateProp == nil || len(input.updateProp) == 0 {
+	if len(input.updateProp) == 0 {
 		return "", fmt.Errorf("update properties are required")
 	}
 
@@ -99,13 +116,21 @@ func GenerateUpsertEdgeStatement[TVidType statement.VidType](input UpsertEdgeSta
 	sb.WriteString(fmt.Sprintf(`%s->%s@%d`, srcVidValue, dstVidValue, input.rank))
 	sb.WriteString(` SET `)
 
+	sortedPropertKeys := make([]string, 0, len(input.updateProp))
+	for k := range input.updateProp {
+		sortedPropertKeys = append(sortedPropertKeys, k)
+	}
+	sort.Strings(sortedPropertKeys)
+
 	firstProp := true
-	for k, v := range input.updateProp {
+	for _, k := range sortedPropertKeys {
 		if !firstProp {
 			sb.WriteString(`, `)
 		}
 		sb.WriteString(k)
 		sb.WriteString(`=`)
+
+		v := input.updateProp[k]
 		val, err := statement.EncodeNebulaFieldValue(v)
 		if err != nil {
 			return "", err

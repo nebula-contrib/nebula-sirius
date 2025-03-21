@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"github.com/nebula-contrib/nebula-sirius/statement"
 	"github.com/nebula-contrib/nebula-sirius/statement/edge_delete"
 	"github.com/nebula-contrib/nebula-sirius/statement/edge_insert"
 	"github.com/nebula-contrib/nebula-sirius/statement/edge_upsert"
@@ -25,6 +26,14 @@ type TestCaseGenerateUpsertEdgeStatement[TVidType string | int64] struct {
 	Given         edge_upsert.UpsertEdgeStatement[TVidType]
 	Expected      string
 	IsErrExpected bool
+}
+
+type TestCaseGenerateBatchEdgeStatement[TVidType string | int64] struct {
+	Description     string
+	GivenStatements []statement.IEdgeStatementOperation[TVidType]
+	GivenBatchSize  int
+	Expected        []string
+	IsErrExpected   bool
 }
 
 func GetTestCasesForGenerateInsertEdgeStatementWhereVidString() []TestCaseGenerateInsertEdgeStatement[string] {
@@ -70,23 +79,16 @@ func GetTestCasesForGenerateInsertEdgeStatementWhereVidInt64() []TestCaseGenerat
 func GetTestCasesForGenerateDeleteEdgeStatementWhereVidString() []TestCaseGenerateDeleteEdgeStatement[string] {
 	return []TestCaseGenerateDeleteEdgeStatement[string]{
 		{
-			Description: "A simple insert edge statement without properties and with default settings",
-			Given: edge_delete.DeleteEdgeStatement[string]{
-				SourceVid: "John",
-				TargetVid: "Alive",
-				EdgeType:  "Friend",
-			},
+			Description:   "A simple insert edge statement without properties and with default settings",
+			Given:         edge_delete.NewDeleteEdgeStatement("John", "Alive", "Friend"),
 			Expected:      `DELETE EDGE Friend "John"->"Alive"@0;`,
 			IsErrExpected: false,
 		},
 		{
 			Description: "A simple insert edge statement without properties and with default settings",
-			Given: edge_delete.DeleteEdgeStatement[string]{
-				SourceVid: "John",
-				TargetVid: "Alive",
-				EdgeType:  "Friend",
-				Rank:      99,
-			},
+			Given: edge_delete.NewDeleteEdgeStatement("John", "Alive", "Friend",
+				edge_delete.WithRank[string](99),
+			),
 			Expected:      `DELETE EDGE Friend "John"->"Alive"@99;`,
 			IsErrExpected: false,
 		},
@@ -96,23 +98,16 @@ func GetTestCasesForGenerateDeleteEdgeStatementWhereVidString() []TestCaseGenera
 func GetTestCasesForGenerateDeleteEdgeStatementWhereVidInt64() []TestCaseGenerateDeleteEdgeStatement[int64] {
 	return []TestCaseGenerateDeleteEdgeStatement[int64]{
 		{
-			Description: "A simple insert edge statement without properties and with default settings",
-			Given: edge_delete.DeleteEdgeStatement[int64]{
-				SourceVid: 100,
-				TargetVid: 200,
-				EdgeType:  "Friend",
-			},
+			Description:   "A simple insert edge statement without properties and with default settings",
+			Given:         edge_delete.NewDeleteEdgeStatement[int64](100, 200, "Friend"),
 			Expected:      `DELETE EDGE Friend 100->200@0;`,
 			IsErrExpected: false,
 		},
 		{
 			Description: "A simple insert edge statement without properties and with default settings",
-			Given: edge_delete.DeleteEdgeStatement[int64]{
-				SourceVid: 100,
-				TargetVid: 200,
-				EdgeType:  "Friend",
-				Rank:      99,
-			},
+			Given: edge_delete.NewDeleteEdgeStatement[int64](100, 200, "Friend",
+				edge_delete.WithRank[int64](99),
+			),
 			Expected:      `DELETE EDGE Friend 100->200@99;`,
 			IsErrExpected: false,
 		},
@@ -200,6 +195,150 @@ func GetTestCasesForGenerateUpsertEdgeStatementWhereVidInt64() []TestCaseGenerat
 				nil),
 			Expected:      "",
 			IsErrExpected: true,
+		},
+	}
+}
+
+func GetTestCasesForGenerateBatchEdgeStatementWhereVidString() []TestCaseGenerateBatchEdgeStatement[string] {
+	return []TestCaseGenerateBatchEdgeStatement[string]{
+		{
+			Description: "Edge batch with 4 statements and batch size of 1",
+			GivenStatements: []statement.IEdgeStatementOperation[string]{
+				edge_delete.NewDeleteEdgeStatement("John", "Alive", "Friend"),
+				edge_delete.NewDeleteEdgeStatement("John", "Bob", "Friend"),
+				edge_insert.NewInsertEdgeStatement("John", "Alive", "Friend"),
+				edge_insert.NewInsertEdgeStatement("John", "Bob", "Friend"),
+			},
+			GivenBatchSize: 1,
+			Expected: []string{
+				`DELETE EDGE Friend "John"->"Alive"@0;`,
+				`DELETE EDGE Friend "John"->"Bob"@0;`,
+				`INSERT EDGE Friend () VALUES "John"->"Alive"@0:();`,
+				`INSERT EDGE Friend () VALUES "John"->"Bob"@0:();`,
+			},
+			IsErrExpected: false,
+		},
+		{
+			Description: "Edge batch with 4 statements and batch size of 2",
+			GivenStatements: []statement.IEdgeStatementOperation[string]{
+				edge_delete.NewDeleteEdgeStatement("John", "Alive", "Friend"),
+				edge_delete.NewDeleteEdgeStatement("John", "Bob", "Friend"),
+				edge_insert.NewInsertEdgeStatement("John", "Alive", "Friend"),
+				edge_insert.NewInsertEdgeStatement("John", "Bob", "Friend"),
+			},
+			GivenBatchSize: 2,
+			Expected: []string{
+				`DELETE EDGE Friend "John"->"Alive"@0;` + `DELETE EDGE Friend "John"->"Bob"@0;`,
+				`INSERT EDGE Friend () VALUES "John"->"Alive"@0:();` + `INSERT EDGE Friend () VALUES "John"->"Bob"@0:();`,
+			},
+			IsErrExpected: false,
+		},
+		{
+			Description: "Edge batch with 4 statements and batch size of 3",
+			GivenStatements: []statement.IEdgeStatementOperation[string]{
+				edge_delete.NewDeleteEdgeStatement("John", "Alive", "Friend"),
+				edge_delete.NewDeleteEdgeStatement("John", "Bob", "Friend"),
+				edge_insert.NewInsertEdgeStatement("John", "Alive", "Friend"),
+				edge_insert.NewInsertEdgeStatement("John", "Bob", "Friend"),
+			},
+			GivenBatchSize: 3,
+			Expected: []string{
+				`DELETE EDGE Friend "John"->"Alive"@0;` +
+					`DELETE EDGE Friend "John"->"Bob"@0;` +
+					`INSERT EDGE Friend () VALUES "John"->"Alive"@0:();`,
+				`INSERT EDGE Friend () VALUES "John"->"Bob"@0:();`,
+			},
+			IsErrExpected: false,
+		},
+		{
+			Description: "Edge batch with 4 statements and batch size of 4",
+			GivenStatements: []statement.IEdgeStatementOperation[string]{
+				edge_delete.NewDeleteEdgeStatement("John", "Alive", "Friend"),
+				edge_delete.NewDeleteEdgeStatement("John", "Bob", "Friend"),
+				edge_insert.NewInsertEdgeStatement("John", "Alive", "Friend"),
+				edge_insert.NewInsertEdgeStatement("John", "Bob", "Friend"),
+			},
+			GivenBatchSize: 4,
+			Expected: []string{
+				`DELETE EDGE Friend "John"->"Alive"@0;` +
+					`DELETE EDGE Friend "John"->"Bob"@0;` +
+					`INSERT EDGE Friend () VALUES "John"->"Alive"@0:();` +
+					`INSERT EDGE Friend () VALUES "John"->"Bob"@0:();`,
+			},
+			IsErrExpected: false,
+		},
+	}
+}
+
+func GetTestCasesForGenerateBatchEdgeStatementWhereVidInt64() []TestCaseGenerateBatchEdgeStatement[int64] {
+	return []TestCaseGenerateBatchEdgeStatement[int64]{
+		{
+			Description: "Edge batch with 4 statements and batch size of 1",
+			GivenStatements: []statement.IEdgeStatementOperation[int64]{
+				edge_delete.NewDeleteEdgeStatement(int64(100), int64(200), "Friend"),
+				edge_delete.NewDeleteEdgeStatement(int64(100), int64(300), "Friend"),
+				edge_insert.NewInsertEdgeStatement(int64(100), int64(200), "Friend"),
+				edge_insert.NewInsertEdgeStatement(int64(100), int64(300), "Friend"),
+			},
+			GivenBatchSize: 1,
+			Expected: []string{
+				`DELETE EDGE Friend 100->200@0;`,
+				`DELETE EDGE Friend 100->300@0;`,
+				`INSERT EDGE Friend () VALUES 100->200@0:();`,
+				`INSERT EDGE Friend () VALUES 100->300@0:();`,
+			},
+			IsErrExpected: false,
+		},
+		{
+			Description: "Edge batch with 4 statements and batch size of 2",
+			GivenStatements: []statement.IEdgeStatementOperation[int64]{
+				edge_delete.NewDeleteEdgeStatement(int64(100), int64(200), "Friend"),
+				edge_delete.NewDeleteEdgeStatement(int64(100), int64(300), "Friend"),
+				edge_insert.NewInsertEdgeStatement(int64(100), int64(200), "Friend"),
+				edge_insert.NewInsertEdgeStatement(int64(100), int64(300), "Friend"),
+			},
+			GivenBatchSize: 2,
+			Expected: []string{
+				`DELETE EDGE Friend 100->200@0;` +
+					`DELETE EDGE Friend 100->300@0;`,
+				`INSERT EDGE Friend () VALUES 100->200@0:();` +
+					`INSERT EDGE Friend () VALUES 100->300@0:();`,
+			},
+			IsErrExpected: false,
+		},
+		{
+			Description: "Edge batch with 4 statements and batch size of 3",
+			GivenStatements: []statement.IEdgeStatementOperation[int64]{
+				edge_delete.NewDeleteEdgeStatement(int64(100), int64(200), "Friend"),
+				edge_delete.NewDeleteEdgeStatement(int64(100), int64(300), "Friend"),
+				edge_insert.NewInsertEdgeStatement(int64(100), int64(200), "Friend"),
+				edge_insert.NewInsertEdgeStatement(int64(100), int64(300), "Friend"),
+			},
+			GivenBatchSize: 3,
+			Expected: []string{
+				`DELETE EDGE Friend 100->200@0;` +
+					`DELETE EDGE Friend 100->300@0;` +
+					`INSERT EDGE Friend () VALUES 100->200@0:();`,
+				`INSERT EDGE Friend () VALUES 100->300@0:();`,
+			},
+			IsErrExpected: false,
+		},
+		{
+			Description: "Edge batch with 4 statements and batch size of 4",
+			GivenStatements: []statement.IEdgeStatementOperation[int64]{
+				edge_delete.NewDeleteEdgeStatement(int64(100), int64(200), "Friend"),
+				edge_delete.NewDeleteEdgeStatement(int64(100), int64(300), "Friend"),
+				edge_insert.NewInsertEdgeStatement(int64(100), int64(200), "Friend"),
+				edge_insert.NewInsertEdgeStatement(int64(100), int64(300), "Friend"),
+			},
+			GivenBatchSize: 4,
+			Expected: []string{
+				`DELETE EDGE Friend 100->200@0;` +
+					`DELETE EDGE Friend 100->300@0;` +
+					`INSERT EDGE Friend () VALUES 100->200@0:();` +
+					`INSERT EDGE Friend () VALUES 100->300@0:();`,
+			},
+			IsErrExpected: false,
 		},
 	}
 }
