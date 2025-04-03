@@ -2,6 +2,22 @@ package statement
 
 import "fmt"
 
+type IEdgeStatementOperation[T VidType] interface {
+	GetSrcVid() T
+	GetDstVid() T
+	GetOperationType() OperationTypeStatement
+	GenerateStatement() (string, error)
+}
+
+type OperationTypeStatement int
+
+const (
+	StatementInsert OperationTypeStatement = iota
+	UpdateStatement
+	DeleteStatement
+	UpsertStatement
+)
+
 type VidType interface {
 	string | int64
 }
@@ -13,7 +29,7 @@ const (
 	NEBULA_FIELD_TYPE_GO_TAG = "nebula_field_type"
 )
 
-func encodeVidFieldValueAsStr(vidValue any) (string, error) {
+func EncodeVidFieldValueAsStr(vidValue any) (string, error) {
 	switch v := vidValue.(type) {
 	case string:
 		return fmt.Sprintf(`"%s"`, v), nil
@@ -24,7 +40,7 @@ func encodeVidFieldValueAsStr(vidValue any) (string, error) {
 	}
 }
 
-func encodeNebulaFieldValue(fieldValue any) (string, error) {
+func EncodeNebulaFieldValue(fieldValue any) (string, error) {
 	switch v := fieldValue.(type) {
 	case string:
 		return fmt.Sprintf(`"%s"`, v), nil

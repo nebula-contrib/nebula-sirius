@@ -1,6 +1,7 @@
-package statement
+package tests
 
 import (
+	"github.com/nebula-contrib/nebula-sirius/statement/vertex_delete"
 	"reflect"
 	"testing"
 )
@@ -8,7 +9,7 @@ import (
 func TestGenerateGenerateDeleteVertexStatementWhereVidString(t *testing.T) {
 	testCases := GetTestCasesForDeleteVertexStatementWhereVidString()
 	for _, testcase := range testCases {
-		actual, err := GenerateDeleteVertexStatement(testcase.Given)
+		actual, err := vertex_delete.GenerateDeleteVertexStatement(testcase.Given)
 
 		if err != nil {
 			if !testcase.IsErrExpected {
@@ -33,7 +34,7 @@ func TestGenerateGenerateDeleteVertexStatementWhereVidString(t *testing.T) {
 func TestGenerateGenerateDeleteVertexStatementWhereVidInt64(t *testing.T) {
 	testCases := GetTestCasesForDeleteVertexStatementWhereVidInt64()
 	for _, testcase := range testCases {
-		actual, err := GenerateDeleteVertexStatement(testcase.Given)
+		actual, err := vertex_delete.GenerateDeleteVertexStatement(testcase.Given)
 
 		if err != nil {
 			if !testcase.IsErrExpected {
@@ -58,7 +59,7 @@ func TestGenerateGenerateDeleteVertexStatementWhereVidInt64(t *testing.T) {
 func TestGenerateGenerateBatchedDeleteVertexStatementWhereVidString(t *testing.T) {
 	testCases := GetTestCasesForBatchedDeleteVertexStatementWhereVidString()
 	for _, testcase := range testCases {
-		actual, err := GenerateBatchedDeleteVertexStatements(testcase.Given, testcase.GivenBatchSize)
+		actual, err := vertex_delete.GenerateBatchedDeleteVertexStatements(testcase.Given, testcase.GivenBatchSize)
 
 		if err != nil {
 			if !testcase.IsErrExpected {
@@ -83,7 +84,7 @@ func TestGenerateGenerateBatchedDeleteVertexStatementWhereVidString(t *testing.T
 func TestGenerateGenerateBatchedDeleteVertexStatementWhereVidInt64(t *testing.T) {
 	testCases := GetTestCasesForBatchedDeleteVertexStatementWhereVidInt64()
 	for _, testcase := range testCases {
-		actual, err := GenerateBatchedDeleteVertexStatements(testcase.Given, testcase.GivenBatchSize)
+		actual, err := vertex_delete.GenerateBatchedDeleteVertexStatements(testcase.Given, testcase.GivenBatchSize)
 
 		if err != nil {
 			if !testcase.IsErrExpected {

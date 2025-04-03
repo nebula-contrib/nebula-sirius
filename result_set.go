@@ -1008,6 +1008,8 @@ func (t TimeWrapper) getMicrosec() int32 {
 }
 
 // getRawTime returns a nebula.Time object in UTC.
+//
+//nolint:unused
 func (t TimeWrapper) getRawTime() *nebula.Time {
 	return t.time
 }
@@ -1129,6 +1131,8 @@ func (d DateWrapper) getDay() int8 {
 }
 
 // getRawDate returns a nebula.Date object in UTC.
+//
+//nolint:unused
 func (d DateWrapper) getRawDate() *nebula.Date {
 	return d.date
 }
@@ -1188,6 +1192,8 @@ func (dt1 DateTimeWrapper) IsEqualTo(dt2 DateTimeWrapper) bool {
 }
 
 // getRawDateTime returns a nebula.DateTime object representing local dateTime in UTC.
+//
+//nolint:unused
 func (dt DateTimeWrapper) getRawDateTime() *nebula.DateTime {
 	return dt.dateTime
 }

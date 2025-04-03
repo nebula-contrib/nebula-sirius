@@ -1,4 +1,9 @@
-package statement
+package tests
+
+import (
+	"github.com/nebula-contrib/nebula-sirius/statement/vertex_delete"
+	"github.com/nebula-contrib/nebula-sirius/statement/vertex_insert"
+)
 
 type PersonV2 struct {
 	Vid              string  `nebula_vid:"true"`
@@ -90,7 +95,7 @@ var (
 
 type TestCaseGenerateBatchedInsertVertexStatements struct {
 	Description        string
-	GivenVerticesArray []IInsertableVertex
+	GivenVerticesArray []vertex_insert.IInsertableVertex
 	GivenBatchSize     int
 	Expected           []string
 	IsErrExpected      bool
@@ -98,21 +103,21 @@ type TestCaseGenerateBatchedInsertVertexStatements struct {
 
 type TestCaseGenerateInsertVertexStatement struct {
 	Description        string
-	GivenVerticesArray []IInsertableVertex
+	GivenVerticesArray []vertex_insert.IInsertableVertex
 	Expected           string
 	IsErrExpected      bool
 }
 
 type TestCaseGenerateDeleteVertexStatement[Tvid string | int64] struct {
 	Description   string
-	Given         DeleteVertexStatement[Tvid]
+	Given         vertex_delete.DeleteVertexStatement[Tvid]
 	Expected      string
 	IsErrExpected bool
 }
 
 type TestCaseGenerateBatchedDeleteVertexStatement[Tvid string | int64] struct {
 	Description    string
-	Given          DeleteVertexStatement[Tvid]
+	Given          vertex_delete.DeleteVertexStatement[Tvid]
 	GivenBatchSize int
 	Expected       []string
 	IsErrExpected  bool
@@ -122,7 +127,7 @@ func GetTestCasesForBatchedDeleteVertexStatementWhereVidString() []TestCaseGener
 	return []TestCaseGenerateBatchedDeleteVertexStatement[string]{
 		{
 			Description: "Given Delete Statement with batch, prepare delete scripts where vid are string and WithEdge false",
-			Given: DeleteVertexStatement[string]{
+			Given: vertex_delete.DeleteVertexStatement[string]{
 				VertexIds: []string{"1001", "1002", "1003"},
 				WithEdge:  false,
 			},
@@ -132,7 +137,7 @@ func GetTestCasesForBatchedDeleteVertexStatementWhereVidString() []TestCaseGener
 		},
 		{
 			Description: "Given Delete Statement with batch, prepare delete scripts where vid are string and WithEdge false",
-			Given: DeleteVertexStatement[string]{
+			Given: vertex_delete.DeleteVertexStatement[string]{
 				VertexIds: []string{"1001", "1002", "1003"},
 				WithEdge:  true,
 			},
@@ -142,7 +147,7 @@ func GetTestCasesForBatchedDeleteVertexStatementWhereVidString() []TestCaseGener
 		},
 		{
 			Description: "Given Delete Statement with batch, prepare delete scripts where vid are string and WithEdge false",
-			Given: DeleteVertexStatement[string]{
+			Given: vertex_delete.DeleteVertexStatement[string]{
 				VertexIds: []string{"1001", "1002", "1003"},
 				WithEdge:  true,
 			},
@@ -157,7 +162,7 @@ func GetTestCasesForBatchedDeleteVertexStatementWhereVidInt64() []TestCaseGenera
 	return []TestCaseGenerateBatchedDeleteVertexStatement[int64]{
 		{
 			Description: "Given Delete Statement with batch, prepare delete scripts where vid are string and WithEdge false",
-			Given: DeleteVertexStatement[int64]{
+			Given: vertex_delete.DeleteVertexStatement[int64]{
 				VertexIds: []int64{1001, 1002, 1003},
 				WithEdge:  false,
 			},
@@ -167,7 +172,7 @@ func GetTestCasesForBatchedDeleteVertexStatementWhereVidInt64() []TestCaseGenera
 		},
 		{
 			Description: "Given Delete Statement with batch, prepare delete scripts where vid are string and WithEdge false",
-			Given: DeleteVertexStatement[int64]{
+			Given: vertex_delete.DeleteVertexStatement[int64]{
 				VertexIds: []int64{1001, 1002, 1003},
 				WithEdge:  true,
 			},
@@ -177,7 +182,7 @@ func GetTestCasesForBatchedDeleteVertexStatementWhereVidInt64() []TestCaseGenera
 		},
 		{
 			Description: "Given Delete Statement with batch, prepare delete scripts where vid are string and WithEdge false",
-			Given: DeleteVertexStatement[int64]{
+			Given: vertex_delete.DeleteVertexStatement[int64]{
 				VertexIds: []int64{1001, 1002, 1003},
 				WithEdge:  true,
 			},
@@ -192,7 +197,7 @@ func GetTestCasesForDeleteVertexStatementWhereVidString() []TestCaseGenerateDele
 	return []TestCaseGenerateDeleteVertexStatement[string]{
 		{
 			Description: "Given Delete Statement, prepare delete scripts where vid are string and WithEdge false",
-			Given: DeleteVertexStatement[string]{
+			Given: vertex_delete.DeleteVertexStatement[string]{
 				VertexIds: []string{"1001"},
 				WithEdge:  false,
 			},
@@ -201,7 +206,7 @@ func GetTestCasesForDeleteVertexStatementWhereVidString() []TestCaseGenerateDele
 		},
 		{
 			Description: "Given Delete Statement, prepare delete scripts where vid are string and WithEdge false",
-			Given: DeleteVertexStatement[string]{
+			Given: vertex_delete.DeleteVertexStatement[string]{
 				VertexIds: []string{"1001", "1002"},
 				WithEdge:  false,
 			},
@@ -210,7 +215,7 @@ func GetTestCasesForDeleteVertexStatementWhereVidString() []TestCaseGenerateDele
 		},
 		{
 			Description: "Given Delete Statement, prepare delete scripts where vid are string AND WithEdge true",
-			Given: DeleteVertexStatement[string]{
+			Given: vertex_delete.DeleteVertexStatement[string]{
 				VertexIds: []string{"1012", "1022"},
 				WithEdge:  true,
 			},
@@ -224,7 +229,7 @@ func GetTestCasesForDeleteVertexStatementWhereVidInt64() []TestCaseGenerateDelet
 	return []TestCaseGenerateDeleteVertexStatement[int64]{
 		{
 			Description: "Given Delete Statement, prepare delete scripts where vid are int64 and WithEdge false",
-			Given: DeleteVertexStatement[int64]{
+			Given: vertex_delete.DeleteVertexStatement[int64]{
 				VertexIds: []int64{1001, 1002},
 				WithEdge:  false,
 			},
@@ -233,7 +238,7 @@ func GetTestCasesForDeleteVertexStatementWhereVidInt64() []TestCaseGenerateDelet
 		},
 		{
 			Description: "Given Delete Statement, prepare delete scripts where vid are int64 and WithEdge true",
-			Given: DeleteVertexStatement[int64]{
+			Given: vertex_delete.DeleteVertexStatement[int64]{
 				VertexIds: []int64{1001, 1002},
 				WithEdge:  true,
 			},
@@ -247,7 +252,7 @@ func GetTestCasesForGenerateInsertVertexStatement() []TestCaseGenerateInsertVert
 	return []TestCaseGenerateInsertVertexStatement{
 		{
 			Description: "Given Struct with all reference fields, expect insert script containing all fields",
-			GivenVerticesArray: []IInsertableVertex{
+			GivenVerticesArray: []vertex_insert.IInsertableVertex{
 				&PersonV1{
 					Vid:              &vid,
 					f_bool:           &fBool,
@@ -273,7 +278,7 @@ func GetTestCasesForGenerateInsertVertexStatement() []TestCaseGenerateInsertVert
 		},
 		{
 			Description: "Given Struct with all scalar fields, expect insert script containing all fields",
-			GivenVerticesArray: []IInsertableVertex{
+			GivenVerticesArray: []vertex_insert.IInsertableVertex{
 				&PersonV2{
 					Vid:              "4001",
 					f_bool:           true,
@@ -299,7 +304,7 @@ func GetTestCasesForGenerateInsertVertexStatement() []TestCaseGenerateInsertVert
 		},
 		{
 			Description: "Given Struct with partially reference fields, expect insert script containing non-nil fields",
-			GivenVerticesArray: []IInsertableVertex{
+			GivenVerticesArray: []vertex_insert.IInsertableVertex{
 				&PersonV1{
 					Vid:           &vid,
 					f_bool:        &fBool,
@@ -317,7 +322,7 @@ func GetTestCasesForGenerateInsertVertexStatement() []TestCaseGenerateInsertVert
 		},
 		{
 			Description: "Given Struct with partially reference fields, expect insert script containing non-nil fields",
-			GivenVerticesArray: []IInsertableVertex{
+			GivenVerticesArray: []vertex_insert.IInsertableVertex{
 				&PersonV1{
 					Vid:           &vid,
 					f_bool:        &fBool,
@@ -335,7 +340,7 @@ func GetTestCasesForGenerateInsertVertexStatement() []TestCaseGenerateInsertVert
 		},
 		{
 			Description: "Given Struct with no fields except vid field, expect insert script with no fields and insert if exists option",
-			GivenVerticesArray: []IInsertableVertex{
+			GivenVerticesArray: []vertex_insert.IInsertableVertex{
 				&PersonV3{
 					Vid: &vid,
 				},
@@ -345,7 +350,7 @@ func GetTestCasesForGenerateInsertVertexStatement() []TestCaseGenerateInsertVert
 		},
 		{
 			Description: "Given Struct with no vid field, return error",
-			GivenVerticesArray: []IInsertableVertex{
+			GivenVerticesArray: []vertex_insert.IInsertableVertex{
 				&PersonV3{},
 			},
 			Expected:      "",
@@ -355,7 +360,7 @@ func GetTestCasesForGenerateInsertVertexStatement() []TestCaseGenerateInsertVert
 }
 
 func GetTestCasesForGenerateBatchedInsertVertexStatements() []TestCaseGenerateBatchedInsertVertexStatements {
-	vertices := []IInsertableVertex{
+	vertices := []vertex_insert.IInsertableVertex{
 		&PersonV1{
 			Vid:    &vid,
 			f_bool: &fBool,
