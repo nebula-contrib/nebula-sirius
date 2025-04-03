@@ -2,6 +2,21 @@ package statement
 
 import "fmt"
 
+type PropertyType string
+
+const (
+	PropertyTypeString    PropertyType = "string"
+	PropertyTypeInt       PropertyType = "int"
+	PropertyTypeFloat     PropertyType = "float"
+	PropertyTypeBoolean   PropertyType = "boolean"
+	PropertyTypeDate      PropertyType = "date"
+	PropertyTypeTime      PropertyType = "time"
+	PropertyTypeDateTime  PropertyType = "datetime"
+	PropertyTypeTimestamp PropertyType = "timestamp"
+	PropertyTypeGeography PropertyType = "geography"
+	PropertyTypeDuration  PropertyType = "duration"
+)
+
 type IEdgeStatementOperation[T VidType] interface {
 	GetSrcVid() T
 	GetDstVid() T
