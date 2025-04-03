@@ -5,16 +5,27 @@ import "fmt"
 type PropertyType string
 
 const (
-	PropertyTypeString    PropertyType = "string"
-	PropertyTypeInt       PropertyType = "int"
-	PropertyTypeFloat     PropertyType = "float"
-	PropertyTypeBoolean   PropertyType = "boolean"
+	PropertyTypeString       PropertyType = "string"
+	PropertyTypeFixedStringF PropertyType = "fixed_string(%d)"
+
+	PropertyTypeInt   PropertyType = "int"
+	PropertyTypeInt64 PropertyType = "int64"
+	PropertyTypeInt32 PropertyType = "int32"
+	PropertyTypeInt16 PropertyType = "int16"
+	PropertyTypeInt8  PropertyType = "int8"
+
+	PropertyTypeFloat  PropertyType = "float"
+	PropertyTypeDouble PropertyType = "double"
+
+	PropertyTypeBoolean PropertyType = "bool"
+
 	PropertyTypeDate      PropertyType = "date"
 	PropertyTypeTime      PropertyType = "time"
 	PropertyTypeDateTime  PropertyType = "datetime"
 	PropertyTypeTimestamp PropertyType = "timestamp"
-	PropertyTypeGeography PropertyType = "geography"
 	PropertyTypeDuration  PropertyType = "duration"
+
+	PropertyTypeGeography PropertyType = "geography"
 )
 
 type IEdgeStatementOperation[T VidType] interface {
@@ -27,12 +38,13 @@ type IEdgeStatementOperation[T VidType] interface {
 type OperationTypeStatement int
 
 const (
-	StatementInsert OperationTypeStatement = iota
+	InsertStatement OperationTypeStatement = iota
 	UpdateStatement
 	DeleteStatement
 	UpsertStatement
 )
 
+// VidType is a type constraint for vertex ID types.
 type VidType interface {
 	string | int64
 }
@@ -44,6 +56,13 @@ const (
 	NEBULA_FIELD_TYPE_GO_TAG = "nebula_field_type"
 )
 
+// EncodeVidFieldValueAsStr encodes a vertex ID field value into a string representation.
+// It handles both string and int64 types.
+// The function returns the encoded string and an error if the type is unsupported.
+// Supported types:
+// - string
+// - int64
+// The function formats the string with double quotes for string types and without quotes for int64 types.
 func EncodeVidFieldValueAsStr(vidValue any) (string, error) {
 	switch v := vidValue.(type) {
 	case string:
@@ -55,6 +74,14 @@ func EncodeVidFieldValueAsStr(vidValue any) (string, error) {
 	}
 }
 
+// EncodeNebulaFieldValue encodes a Nebula field value into a string representation.
+// It handles various types such as string, int, float, and bool.
+// The function returns the encoded string and an error if the type is unsupported.
+// Supported types:
+// - string
+// - int (and its variants)
+// - float (and its variants)
+// - bool
 func EncodeNebulaFieldValue(fieldValue any) (string, error) {
 	switch v := fieldValue.(type) {
 	case string:

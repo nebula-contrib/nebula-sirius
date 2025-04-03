@@ -2,6 +2,7 @@ package tests
 
 import (
 	"github.com/nebula-contrib/nebula-sirius/statement"
+	"github.com/nebula-contrib/nebula-sirius/statement/tag_alter"
 	"github.com/nebula-contrib/nebula-sirius/statement/tag_create"
 	"github.com/nebula-contrib/nebula-sirius/statement/tag_delete"
 	"github.com/nebula-contrib/nebula-sirius/statement/tag_drop"
@@ -23,6 +24,20 @@ type TestCaseGenerateDropTagStatement struct {
 type TestCaseGenerateDeleteTagStatement[TVidType string | int64] struct {
 	Description   string
 	Given         tag_delete.DeleteTagStatement[TVidType]
+	Expected      string
+	IsErrExpected bool
+}
+
+type TestCaseGenerateTagTTLDefinitionStatement struct {
+	Description   string
+	Given         tag_alter.TTLDefinition
+	Expected      string
+	IsErrExpected bool
+}
+
+type TestCaseGenerateTagAlterStatement struct {
+	Description   string
+	Given         tag_alter.AlterTagStatement
 	Expected      string
 	IsErrExpected bool
 }
@@ -179,6 +194,131 @@ func GetTestCasesForGenerateDeleteTagStatementWhereVidInt64() []TestCaseGenerate
 			Given:         tag_delete.NewDeleteTagStatement[int64]([]string{"tag1"}, []int64{100}, tag_delete.WithAllTags[int64]()),
 			Expected:      "",
 			IsErrExpected: true,
+		},
+	}
+}
+
+func GetTestCasesForGenerateTagTTLDefinitionStatement() []TestCaseGenerateTagTTLDefinitionStatement {
+	return []TestCaseGenerateTagTTLDefinitionStatement{
+		{
+			Description: "A simple tag ttl definition statement",
+			Given:       tag_alter.NewTTLDefinition(100, "created_at"),
+			Expected:    `TTL_DURATION = 100, TTL_COL = "created_at"`,
+		},
+		{
+			Description: "A simple tag ttl definition statement",
+			Given:       tag_alter.NewTTLDefinition(0, "created_at"),
+			Expected:    `TTL_DURATION = 0, TTL_COL = "created_at"`,
+		},
+		{
+			Description:   "An error case with negative ttl duration",
+			Given:         tag_alter.NewTTLDefinition(-1, "created_at"),
+			Expected:      "",
+			IsErrExpected: true,
+		},
+		{
+			Description:   "An error case missing ttl column",
+			Given:         tag_alter.NewTTLDefinition(100, ""),
+			Expected:      "",
+			IsErrExpected: true,
+		},
+	}
+}
+
+func GetTestCasesForGenerateTagAlterStatement() []TestCaseGenerateTagAlterStatement {
+	return []TestCaseGenerateTagAlterStatement{
+		{
+			Description: "A simple tag alter statement with add definition",
+			Given: tag_alter.NewAlterTagStatement("tag1",
+				[]tag_alter.IAlterTypeDefinition{
+					tag_alter.NewAlterTypeAddDefinition("prop1", statement.PropertyTypeString),
+				}),
+			Expected: `ALTER TAG tag1 ADD (prop1 string NULL);`,
+		},
+		{
+			Description: "A simple tag alter statement with add definition and tag comment",
+			Given: tag_alter.NewAlterTagStatement("tag1",
+				[]tag_alter.IAlterTypeDefinition{
+					tag_alter.NewAlterTypeAddDefinition("prop1", statement.PropertyTypeString),
+				},
+				tag_alter.WithTagComment("test comment")),
+			Expected: `ALTER TAG tag1 ADD (prop1 string NULL) COMMENT 'test comment';`,
+		},
+		{
+			Description: "A simple tag alter statement with add definition and ttl definition",
+			Given: tag_alter.NewAlterTagStatement("tag1",
+				[]tag_alter.IAlterTypeDefinition{
+					tag_alter.NewAlterTypeAddDefinition("prop1", statement.PropertyTypeString),
+				},
+				tag_alter.WithTtlDefinitions([]tag_alter.TTLDefinition{
+					tag_alter.NewTTLDefinition(100, "created_at"),
+				})),
+			Expected: `ALTER TAG tag1 ADD (prop1 string NULL) TTL_DURATION = 100, TTL_COL = "created_at";`,
+		},
+		{
+			Description: "A simple tag alter statement with add definition and two ttl definitions",
+			Given: tag_alter.NewAlterTagStatement("tag1",
+				[]tag_alter.IAlterTypeDefinition{
+					tag_alter.NewAlterTypeAddDefinition("prop1", statement.PropertyTypeString),
+				},
+				tag_alter.WithTtlDefinitions([]tag_alter.TTLDefinition{
+					tag_alter.NewTTLDefinition(100, "created_at"),
+					tag_alter.NewTTLDefinition(200, "updated_at"),
+				})),
+			Expected: `ALTER TAG tag1 ADD (prop1 string NULL) TTL_DURATION = 100, TTL_COL = "created_at", TTL_DURATION = 200, TTL_COL = "updated_at";`,
+		},
+		{
+			Description: "A simple tag alter statement with two add definitions",
+			Given: tag_alter.NewAlterTagStatement("tag1",
+				[]tag_alter.IAlterTypeDefinition{
+					tag_alter.NewAlterTypeAddDefinition("prop1", statement.PropertyTypeString),
+					tag_alter.NewAlterTypeAddDefinition("prop2", statement.PropertyTypeInt),
+				}),
+			Expected: `ALTER TAG tag1 ADD (prop1 string NULL), ADD (prop2 int NULL);`,
+		},
+		{
+			Description: "A simple tag alter statement with change definition",
+			Given: tag_alter.NewAlterTagStatement("tag1",
+				[]tag_alter.IAlterTypeDefinition{
+					tag_alter.NewAlterTypeChangeDefinition("prop1", statement.PropertyTypeString),
+				}),
+			Expected: `ALTER TAG tag1 CHANGE (prop1 string NULL);`,
+		},
+		{
+			Description: "A simple tag alter statement with two change definitions",
+			Given: tag_alter.NewAlterTagStatement("tag1",
+				[]tag_alter.IAlterTypeDefinition{
+					tag_alter.NewAlterTypeChangeDefinition("prop1", statement.PropertyTypeString),
+					tag_alter.NewAlterTypeChangeDefinition("prop2", statement.PropertyTypeString),
+				}),
+			Expected: `ALTER TAG tag1 CHANGE (prop1 string NULL), CHANGE (prop2 string NULL);`,
+		},
+		{
+			Description: "A simple tag alter statement with drop definition",
+			Given: tag_alter.NewAlterTagStatement("tag1",
+				[]tag_alter.IAlterTypeDefinition{
+					tag_alter.NewAlterTypeDropDefinition("prop1"),
+				}),
+			Expected: `ALTER TAG tag1 DROP (prop1);`,
+		},
+		{
+			Description: "A simple tag alter statement with two drop definitions",
+			Given: tag_alter.NewAlterTagStatement("tag1",
+				[]tag_alter.IAlterTypeDefinition{
+					tag_alter.NewAlterTypeDropDefinition("prop1"),
+					tag_alter.NewAlterTypeDropDefinition("prop2"),
+				}),
+			Expected: `ALTER TAG tag1 DROP (prop1), DROP (prop2);`,
+		},
+		{
+			Description: "A tag alter statement with add, change and drop definitions",
+			Given: tag_alter.NewAlterTagStatement("tag1",
+				[]tag_alter.IAlterTypeDefinition{
+					tag_alter.NewAlterTypeAddDefinition("prop1", statement.PropertyTypeString),
+					tag_alter.NewAlterTypeChangeDefinition("prop2", statement.PropertyTypeString),
+					tag_alter.NewAlterTypeDropDefinition("prop3"),
+				}),
+			Expected: `ALTER TAG tag1 ADD (prop1 string NULL), CHANGE (prop2 string NULL), DROP (prop3);`,
 		},
 	}
 }

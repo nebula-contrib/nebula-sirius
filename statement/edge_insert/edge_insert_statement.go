@@ -27,7 +27,7 @@ func (s InsertEdgeStatement[TVidType]) GetDstVid() TVidType {
 }
 
 func (s InsertEdgeStatement[TVidType]) GetOperationType() statement.OperationTypeStatement {
-	return statement.StatementInsert
+	return statement.InsertStatement
 }
 
 func (s InsertEdgeStatement[TVidType]) GenerateStatement() (string, error) {
