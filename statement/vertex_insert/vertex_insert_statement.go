@@ -139,22 +139,22 @@ func GenerateInsertVertexStatement(vertices []IInsertableVertex) (string, error)
 			case reflect.String:
 				{
 					switch structField.Tag.Get(statement.NEBULA_FIELD_TYPE_GO_TAG) {
-					case "date":
+					case string(statement.PropertyTypeDate):
 						//		 date("2025-02-15"),
 						values = append(values, fmt.Sprintf("date(\"%v\")", structFieldVal))
-					case "time":
+					case string(statement.PropertyTypeTime):
 						//		  time("14:30:00"),
 						values = append(values, fmt.Sprintf("time(\"%v\")", structFieldVal))
-					case "datetime":
+					case string(statement.PropertyTypeDateTime):
 						//        datetime("2017-03-04T22:30:40.003000[Asia/Shanghai]"),
 						values = append(values, fmt.Sprintf("datetime(\"%v\")", structFieldVal))
-					case "timestamp":
+					case string(statement.PropertyTypeTimestamp):
 						//        timestamp("1988-03-01T08:00:00"),
 						values = append(values, fmt.Sprintf("timestamp(\"%v\")", structFieldVal))
-					case "geography":
+					case string(statement.PropertyTypeGeography):
 						//        ST_GeogFromText("POINT(1 1)"),
 						values = append(values, fmt.Sprintf("ST_GeogFromText(\"%v\")", structFieldVal))
-					case "duration":
+					case string(statement.PropertyTypeDuration):
 						//        duration({years: 12, days: 14, hours: 99, minutes: 12})
 						values = append(values, fmt.Sprintf("duration(%v)", structFieldVal))
 					default:
