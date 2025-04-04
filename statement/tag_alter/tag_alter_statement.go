@@ -7,10 +7,10 @@ import (
 
 // AlterTagStatement represents the ALTER TAG statement in Nebula Graph.
 type AlterTagStatement struct {
-	tagName  string                 //required
-	alterDef []IAlterTypeDefinition //required
-	ttlDef   []TTLDefinition        // optional
-	comment  string                 //optional
+	tagName  string                    //required
+	alterDef []IAlterTagTypeDefinition //required
+	ttlDef   []TTLDefinition           // optional
+	comment  string                    //optional
 }
 
 // AlterTagStatementOption is a functional option for configuring an AlterTagStatement.
@@ -31,14 +31,14 @@ type AlterTagStatementOption func(*AlterTagStatement)
 // Example usage:
 //
 //	```
-//	alterTagStmt := NewAlterTagStatement("Person", []IAlterTypeDefinition{
+//	alterTagStmt := NewAlterTagStatement("Person", []IAlterTagTypeDefinition{
 //	    NewAlterTypeAddDefinition("age", statement.IntType),
 //	    NewAlterTypeDropDefinition("address"),
 //	}, WithTtlDefinitions([]TTLDefinition{
 //	    NewTTLDefinition("age", 30),
 //	}), WithTagComment("This is a comment"))
 //	```
-func NewAlterTagStatement(tagName string, alterDef []IAlterTypeDefinition, options ...AlterTagStatementOption) AlterTagStatement {
+func NewAlterTagStatement(tagName string, alterDef []IAlterTagTypeDefinition, options ...AlterTagStatementOption) AlterTagStatement {
 	statement := AlterTagStatement{
 		tagName:  tagName,
 		alterDef: alterDef,

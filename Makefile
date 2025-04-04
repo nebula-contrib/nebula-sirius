@@ -6,10 +6,14 @@ fmt:
 lint:
 	@test -z `gofmt -l *.go` || (echo "Please run 'make fmt' to format Go code" && exit 1)
 
+m1:
+	grep -vE '.*/mocks/.*|.*/nebulagraph-light-deployment/.*|.*/nebula/.*|.*/examples/.*' coverage.out > coverage.filtered.out
+	go tool cover -func=coverage.filtered.out
 unit:
 	go mod tidy
-	go test -v -race --covermode=atomic --coverprofile coverage.out -cover -json
+	go test ./... -v -race --covermode=atomic --coverprofile coverage.out -cover -json
 	go tool cover -func=coverage.out
+	#go tool cover -html=coverage.out -o coverage.html
 
 
 ########################################################################
