@@ -16,9 +16,10 @@ type TestCaseGenerateCreateTagStatement struct {
 }
 
 type TestCaseGenerateDropTagStatement struct {
-	Description string
-	Given       tag_drop.DropTagStatement
-	Expected    string
+	Description   string
+	Given         tag_drop.DropTagStatement
+	Expected      string
+	IsErrExpected bool
 }
 
 type TestCaseGenerateDeleteTagStatement[TVidType string | int64] struct {
@@ -61,9 +62,9 @@ func GetTestCasesForGenerateCreateTagStatement() []TestCaseGenerateCreateTagStat
 			Given: tag_create.NewCreateTagStatement("account",
 				tag_create.WithIfNotExists(true),
 				tag_create.WithProperties([]tag_create.TagProperty{
-					{Field: "name", Type: statement.PropertyTypeString, Nullable: false},
-					{Field: "email", Type: statement.PropertyTypeString, Nullable: true},
-					{Field: "phone", Type: statement.PropertyTypeString, Nullable: true},
+					tag_create.NewTagProperty("name", statement.PropertyTypeString, false),
+					tag_create.NewTagProperty("email", statement.PropertyTypeString, true),
+					tag_create.NewTagProperty("phone", statement.PropertyTypeString, true),
 				})),
 			Expected:      `CREATE TAG IF NOT EXISTS account (name string NOT NULL, email string NULL, phone string NULL);`,
 			IsErrExpected: false,
@@ -73,9 +74,9 @@ func GetTestCasesForGenerateCreateTagStatement() []TestCaseGenerateCreateTagStat
 			Given: tag_create.NewCreateTagStatement("account",
 				tag_create.WithIfNotExists(true),
 				tag_create.WithProperties([]tag_create.TagProperty{
-					{Field: "name", Nullable: false},
-					{Field: "email", Nullable: true},
-					{Field: "phone", Nullable: true},
+					tag_create.NewTagProperty("name", statement.PropertyTypeString, false),
+					tag_create.NewTagProperty("email", statement.PropertyTypeString, true),
+					tag_create.NewTagProperty("phone", statement.PropertyTypeString, true),
 				})),
 			Expected:      `CREATE TAG IF NOT EXISTS account (name string NOT NULL, email string NULL, phone string NULL);`,
 			IsErrExpected: false,
@@ -87,10 +88,10 @@ func GetTestCasesForGenerateCreateTagStatement() []TestCaseGenerateCreateTagStat
 				tag_create.WithTtlCol("created_at"),
 				tag_create.WithTtlDuration(100),
 				tag_create.WithProperties([]tag_create.TagProperty{
-					{Field: "name", Nullable: false},
-					{Field: "email", Nullable: true},
-					{Field: "phone", Nullable: true},
-					{Field: "created_at", Type: "timestamp", Nullable: true},
+					tag_create.NewTagProperty("name", statement.PropertyTypeString, false),
+					tag_create.NewTagProperty("email", statement.PropertyTypeString, true),
+					tag_create.NewTagProperty("phone", statement.PropertyTypeString, true),
+					tag_create.NewTagProperty("created_at", statement.PropertyTypeTimestamp, true),
 				})),
 			Expected:      `CREATE TAG IF NOT EXISTS account (name string NOT NULL, email string NULL, phone string NULL, created_at timestamp NULL) TTL_DURATION = 100, TTL_COL = "created_at";`,
 			IsErrExpected: false,
@@ -102,10 +103,10 @@ func GetTestCasesForGenerateCreateTagStatement() []TestCaseGenerateCreateTagStat
 				tag_create.WithTtlCol("not_existed_field"),
 				tag_create.WithTtlDuration(100),
 				tag_create.WithProperties([]tag_create.TagProperty{
-					{Field: "name", Nullable: false},
-					{Field: "email", Nullable: true},
-					{Field: "phone", Nullable: true},
-					{Field: "created_at", Type: "timestamp", Nullable: true},
+					tag_create.NewTagProperty("name", statement.PropertyTypeString, false),
+					tag_create.NewTagProperty("email", statement.PropertyTypeString, true),
+					tag_create.NewTagProperty("phone", statement.PropertyTypeString, true),
+					tag_create.NewTagProperty("created_at", statement.PropertyTypeTimestamp, true),
 				})),
 			Expected:      "",
 			IsErrExpected: true,
@@ -124,6 +125,12 @@ func GetTestCasesForGenerateDropTagStatement() []TestCaseGenerateDropTagStatemen
 			Description: "A simple drop tag statement with IfExists",
 			Given:       tag_drop.NewDropTagStatement("account", tag_drop.WithIfExists(true)),
 			Expected:    `DROP TAG IF EXISTS account;`,
+		},
+		{
+			Description:   "A error case with empty tag name",
+			Given:         tag_drop.NewDropTagStatement(""),
+			Expected:      "",
+			IsErrExpected: true,
 		},
 	}
 }
@@ -230,7 +237,7 @@ func GetTestCasesForGenerateTagAlterStatement() []TestCaseGenerateTagAlterStatem
 		{
 			Description: "A simple tag alter statement with add definition",
 			Given: tag_alter.NewAlterTagStatement("tag1",
-				[]tag_alter.IAlterTypeDefinition{
+				[]tag_alter.IAlterTagTypeDefinition{
 					tag_alter.NewAlterTypeAddDefinition("prop1", statement.PropertyTypeString),
 				}),
 			Expected: `ALTER TAG tag1 ADD (prop1 string NULL);`,
@@ -238,7 +245,7 @@ func GetTestCasesForGenerateTagAlterStatement() []TestCaseGenerateTagAlterStatem
 		{
 			Description: "A simple tag alter statement with add definition and tag comment",
 			Given: tag_alter.NewAlterTagStatement("tag1",
-				[]tag_alter.IAlterTypeDefinition{
+				[]tag_alter.IAlterTagTypeDefinition{
 					tag_alter.NewAlterTypeAddDefinition("prop1", statement.PropertyTypeString),
 				},
 				tag_alter.WithTagComment("test comment")),
@@ -247,7 +254,7 @@ func GetTestCasesForGenerateTagAlterStatement() []TestCaseGenerateTagAlterStatem
 		{
 			Description: "A simple tag alter statement with add definition and ttl definition",
 			Given: tag_alter.NewAlterTagStatement("tag1",
-				[]tag_alter.IAlterTypeDefinition{
+				[]tag_alter.IAlterTagTypeDefinition{
 					tag_alter.NewAlterTypeAddDefinition("prop1", statement.PropertyTypeString),
 				},
 				tag_alter.WithTtlDefinitions([]tag_alter.TTLDefinition{
@@ -258,7 +265,7 @@ func GetTestCasesForGenerateTagAlterStatement() []TestCaseGenerateTagAlterStatem
 		{
 			Description: "A simple tag alter statement with add definition and two ttl definitions",
 			Given: tag_alter.NewAlterTagStatement("tag1",
-				[]tag_alter.IAlterTypeDefinition{
+				[]tag_alter.IAlterTagTypeDefinition{
 					tag_alter.NewAlterTypeAddDefinition("prop1", statement.PropertyTypeString),
 				},
 				tag_alter.WithTtlDefinitions([]tag_alter.TTLDefinition{
@@ -270,7 +277,7 @@ func GetTestCasesForGenerateTagAlterStatement() []TestCaseGenerateTagAlterStatem
 		{
 			Description: "A simple tag alter statement with two add definitions",
 			Given: tag_alter.NewAlterTagStatement("tag1",
-				[]tag_alter.IAlterTypeDefinition{
+				[]tag_alter.IAlterTagTypeDefinition{
 					tag_alter.NewAlterTypeAddDefinition("prop1", statement.PropertyTypeString),
 					tag_alter.NewAlterTypeAddDefinition("prop2", statement.PropertyTypeInt),
 				}),
@@ -279,7 +286,7 @@ func GetTestCasesForGenerateTagAlterStatement() []TestCaseGenerateTagAlterStatem
 		{
 			Description: "A simple tag alter statement with change definition",
 			Given: tag_alter.NewAlterTagStatement("tag1",
-				[]tag_alter.IAlterTypeDefinition{
+				[]tag_alter.IAlterTagTypeDefinition{
 					tag_alter.NewAlterTypeChangeDefinition("prop1", statement.PropertyTypeString),
 				}),
 			Expected: `ALTER TAG tag1 CHANGE (prop1 string NULL);`,
@@ -287,7 +294,7 @@ func GetTestCasesForGenerateTagAlterStatement() []TestCaseGenerateTagAlterStatem
 		{
 			Description: "A simple tag alter statement with two change definitions",
 			Given: tag_alter.NewAlterTagStatement("tag1",
-				[]tag_alter.IAlterTypeDefinition{
+				[]tag_alter.IAlterTagTypeDefinition{
 					tag_alter.NewAlterTypeChangeDefinition("prop1", statement.PropertyTypeString),
 					tag_alter.NewAlterTypeChangeDefinition("prop2", statement.PropertyTypeString),
 				}),
@@ -296,7 +303,7 @@ func GetTestCasesForGenerateTagAlterStatement() []TestCaseGenerateTagAlterStatem
 		{
 			Description: "A simple tag alter statement with drop definition",
 			Given: tag_alter.NewAlterTagStatement("tag1",
-				[]tag_alter.IAlterTypeDefinition{
+				[]tag_alter.IAlterTagTypeDefinition{
 					tag_alter.NewAlterTypeDropDefinition("prop1"),
 				}),
 			Expected: `ALTER TAG tag1 DROP (prop1);`,
@@ -304,7 +311,7 @@ func GetTestCasesForGenerateTagAlterStatement() []TestCaseGenerateTagAlterStatem
 		{
 			Description: "A simple tag alter statement with two drop definitions",
 			Given: tag_alter.NewAlterTagStatement("tag1",
-				[]tag_alter.IAlterTypeDefinition{
+				[]tag_alter.IAlterTagTypeDefinition{
 					tag_alter.NewAlterTypeDropDefinition("prop1"),
 					tag_alter.NewAlterTypeDropDefinition("prop2"),
 				}),
@@ -313,7 +320,7 @@ func GetTestCasesForGenerateTagAlterStatement() []TestCaseGenerateTagAlterStatem
 		{
 			Description: "A tag alter statement with add, change and drop definitions",
 			Given: tag_alter.NewAlterTagStatement("tag1",
-				[]tag_alter.IAlterTypeDefinition{
+				[]tag_alter.IAlterTagTypeDefinition{
 					tag_alter.NewAlterTypeAddDefinition("prop1", statement.PropertyTypeString),
 					tag_alter.NewAlterTypeChangeDefinition("prop2", statement.PropertyTypeString),
 					tag_alter.NewAlterTypeDropDefinition("prop3"),

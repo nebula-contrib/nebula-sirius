@@ -1,4 +1,4 @@
-package tag_alter
+package edge_alter
 
 type AlterType string
 
@@ -8,7 +8,7 @@ const (
 	AlterTypeChange AlterType = "CHANGE"
 )
 
-type IAlterTagTypeDefinition interface {
+type IAlterEdgeTypeDefinition interface {
 	GetAlterType() AlterType
 	GenerateStatement() (string, error)
 }

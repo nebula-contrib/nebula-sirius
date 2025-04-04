@@ -1,15 +1,14 @@
 package tests
 
 import (
-	"github.com/nebula-contrib/nebula-sirius/statement/tag_drop"
 	"reflect"
 	"testing"
 )
 
-func TestGenerateDropTagStatement(t *testing.T) {
-	testCases := GetTestCasesForGenerateDropTagStatement()
+func TestGenerateEdgeAlterTypeDefinitionAddStatement(t *testing.T) {
+	testCases := GetTestCasesForGenerateEdgeAlterTypeDefinitionAddStatement()
 	for _, testcase := range testCases {
-		actual, err := tag_drop.GenerateDropTagStatement(testcase.Given)
+		actual, err := testcase.Given.GenerateStatement()
 
 		if err != nil {
 			if !testcase.IsErrExpected {
