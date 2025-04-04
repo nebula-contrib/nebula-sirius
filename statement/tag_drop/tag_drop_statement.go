@@ -1,6 +1,7 @@
 package tag_drop
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -37,7 +38,10 @@ func WithIfExists(ifExists bool) func(*DropTagStatement) {
 }
 
 // GenerateDropTagStatement generates the DROP TAG statement based on the provided DropTagStatement.
-func GenerateDropTagStatement(tag DropTagStatement) string {
+func GenerateDropTagStatement(tag DropTagStatement) (string, error) {
+	if tag.name == "" {
+		return "", fmt.Errorf("tag name cannot be empty")
+	}
 	var sb strings.Builder
 
 	sb.WriteString("DROP TAG ")
@@ -47,5 +51,5 @@ func GenerateDropTagStatement(tag DropTagStatement) string {
 
 	sb.WriteString(tag.name)
 	sb.WriteString(";")
-	return sb.String()
+	return sb.String(), nil
 }

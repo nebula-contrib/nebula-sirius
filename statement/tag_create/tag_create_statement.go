@@ -19,9 +19,18 @@ type CreateTagStatement struct {
 // TagProperty represents a property in a tag.
 // It contains the name, type, and nullable flag.
 type TagProperty struct {
-	Field    string
-	Type     statement.PropertyType
-	Nullable bool
+	field    string
+	ttype    statement.PropertyType
+	nullable bool
+}
+
+// NewTagProperty creates a new TagProperty with the given field name, property type, and nullable flag.
+func NewTagProperty(field string, propertyType statement.PropertyType, nullable bool) TagProperty {
+	return TagProperty{
+		field:    field,
+		ttype:    propertyType,
+		nullable: nullable,
+	}
 }
 
 // CreateTagStatementOption is a functional option for configuring a CreateTagStatement.
@@ -96,15 +105,15 @@ func GenerateCreateTagStatement(tag CreateTagStatement) (string, error) {
 			sb.WriteString(", ")
 		}
 
-		t := string(field.Type)
+		t := string(field.ttype)
 		if t == "" {
 			t = "string"
 		}
 		n := "NULL"
-		if !field.Nullable {
+		if !field.nullable {
 			n = "NOT NULL"
 		}
-		sb.WriteString(field.Field)
+		sb.WriteString(field.field)
 		sb.WriteString(" ")
 		sb.WriteString(t)
 		sb.WriteString(" ")
@@ -129,7 +138,7 @@ func isTTLColValid(ttlCol string, properties []TagProperty) error {
 	}
 
 	for _, field := range properties {
-		if field.Field == ttlCol {
+		if field.field == ttlCol {
 			return nil
 		}
 	}

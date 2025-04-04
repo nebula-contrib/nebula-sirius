@@ -2,6 +2,7 @@ package tests
 
 import (
 	"github.com/nebula-contrib/nebula-sirius/statement"
+	"github.com/nebula-contrib/nebula-sirius/statement/edge_alter"
 	"github.com/nebula-contrib/nebula-sirius/statement/edge_delete"
 	"github.com/nebula-contrib/nebula-sirius/statement/edge_insert"
 	"github.com/nebula-contrib/nebula-sirius/statement/edge_upsert"
@@ -34,6 +35,13 @@ type TestCaseGenerateBatchEdgeStatement[TVidType string | int64] struct {
 	GivenBatchSize  int
 	Expected        []string
 	IsErrExpected   bool
+}
+
+type TestCaseGenerateEdgeAlterStatement struct {
+	Description   string
+	Given         edge_alter.AlterEdgeStatement
+	Expected      string
+	IsErrExpected bool
 }
 
 func GetTestCasesForGenerateInsertEdgeStatementWhereVidString() []TestCaseGenerateInsertEdgeStatement[string] {
@@ -339,6 +347,104 @@ func GetTestCasesForGenerateBatchEdgeStatementWhereVidInt64() []TestCaseGenerate
 					`INSERT EDGE Friend () VALUES 100->300@0:();`,
 			},
 			IsErrExpected: false,
+		},
+	}
+}
+
+func GetTestCasesForGenerateEdgeAlterStatement() []TestCaseGenerateEdgeAlterStatement {
+	return []TestCaseGenerateEdgeAlterStatement{
+		{
+			Description: "A simple tag alter statement with add definition",
+			Given: edge_alter.NewAlterEdgeStatement("tag1",
+				[]edge_alter.IAlterEdgeTypeDefinition{
+					edge_alter.NewAlterTypeAddDefinition("prop1", statement.PropertyTypeString),
+				}),
+			Expected: `ALTER EDGE tag1 ADD (prop1 string);`,
+		},
+		{
+			Description: "A simple tag alter statement with add definition and tag comment",
+			Given: edge_alter.NewAlterEdgeStatement("tag1",
+				[]edge_alter.IAlterEdgeTypeDefinition{
+					edge_alter.NewAlterTypeAddDefinition("prop1", statement.PropertyTypeString),
+				},
+				edge_alter.WithTagComment("test comment")),
+			Expected: `ALTER EDGE tag1 ADD (prop1 string) COMMENT 'test comment';`,
+		},
+		{
+			Description: "A simple tag alter statement with add definition and ttl definition",
+			Given: edge_alter.NewAlterEdgeStatement("tag1",
+				[]edge_alter.IAlterEdgeTypeDefinition{
+					edge_alter.NewAlterTypeAddDefinition("prop1", statement.PropertyTypeString),
+				},
+				edge_alter.WithTtlDefinitions([]edge_alter.TTLDefinition{
+					edge_alter.NewTTLDefinition(100, "created_at"),
+				})),
+			Expected: `ALTER EDGE tag1 ADD (prop1 string) TTL_DURATION = 100, TTL_COL = "created_at";`,
+		},
+		{
+			Description: "A simple tag alter statement with add definition and two ttl definitions",
+			Given: edge_alter.NewAlterEdgeStatement("tag1",
+				[]edge_alter.IAlterEdgeTypeDefinition{
+					edge_alter.NewAlterTypeAddDefinition("prop1", statement.PropertyTypeString),
+				},
+				edge_alter.WithTtlDefinitions([]edge_alter.TTLDefinition{
+					edge_alter.NewTTLDefinition(100, "created_at"),
+					edge_alter.NewTTLDefinition(200, "updated_at"),
+				})),
+			Expected: `ALTER EDGE tag1 ADD (prop1 string) TTL_DURATION = 100, TTL_COL = "created_at", TTL_DURATION = 200, TTL_COL = "updated_at";`,
+		},
+		{
+			Description: "A simple tag alter statement with two add definitions",
+			Given: edge_alter.NewAlterEdgeStatement("tag1",
+				[]edge_alter.IAlterEdgeTypeDefinition{
+					edge_alter.NewAlterTypeAddDefinition("prop1", statement.PropertyTypeString),
+					edge_alter.NewAlterTypeAddDefinition("prop2", statement.PropertyTypeInt),
+				}),
+			Expected: `ALTER EDGE tag1 ADD (prop1 string), ADD (prop2 int);`,
+		},
+		{
+			Description: "A simple tag alter statement with change definition",
+			Given: edge_alter.NewAlterEdgeStatement("tag1",
+				[]edge_alter.IAlterEdgeTypeDefinition{
+					edge_alter.NewAlterTypeChangeDefinition("prop1", statement.PropertyTypeString),
+				}),
+			Expected: `ALTER EDGE tag1 CHANGE (prop1 string);`,
+		},
+		{
+			Description: "A simple tag alter statement with two change definitions",
+			Given: edge_alter.NewAlterEdgeStatement("tag1",
+				[]edge_alter.IAlterEdgeTypeDefinition{
+					edge_alter.NewAlterTypeChangeDefinition("prop1", statement.PropertyTypeString),
+					edge_alter.NewAlterTypeChangeDefinition("prop2", statement.PropertyTypeString),
+				}),
+			Expected: `ALTER EDGE tag1 CHANGE (prop1 string), CHANGE (prop2 string);`,
+		},
+		{
+			Description: "A simple tag alter statement with drop definition",
+			Given: edge_alter.NewAlterEdgeStatement("tag1",
+				[]edge_alter.IAlterEdgeTypeDefinition{
+					edge_alter.NewAlterTypeDropDefinition("prop1"),
+				}),
+			Expected: `ALTER EDGE tag1 DROP (prop1);`,
+		},
+		{
+			Description: "A simple tag alter statement with two drop definitions",
+			Given: edge_alter.NewAlterEdgeStatement("tag1",
+				[]edge_alter.IAlterEdgeTypeDefinition{
+					edge_alter.NewAlterTypeDropDefinition("prop1"),
+					edge_alter.NewAlterTypeDropDefinition("prop2"),
+				}),
+			Expected: `ALTER EDGE tag1 DROP (prop1), DROP (prop2);`,
+		},
+		{
+			Description: "A tag alter statement with add, change and drop definitions",
+			Given: edge_alter.NewAlterEdgeStatement("tag1",
+				[]edge_alter.IAlterEdgeTypeDefinition{
+					edge_alter.NewAlterTypeAddDefinition("prop1", statement.PropertyTypeString),
+					edge_alter.NewAlterTypeChangeDefinition("prop2", statement.PropertyTypeString),
+					edge_alter.NewAlterTypeDropDefinition("prop3"),
+				}),
+			Expected: `ALTER EDGE tag1 ADD (prop1 string), CHANGE (prop2 string), DROP (prop3);`,
 		},
 	}
 }
