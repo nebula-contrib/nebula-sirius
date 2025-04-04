@@ -3,6 +3,7 @@ package tests
 import (
 	"github.com/nebula-contrib/nebula-sirius/statement"
 	"github.com/nebula-contrib/nebula-sirius/statement/tag_create"
+	"github.com/nebula-contrib/nebula-sirius/statement/tag_delete"
 	"github.com/nebula-contrib/nebula-sirius/statement/tag_drop"
 )
 
@@ -17,6 +18,13 @@ type TestCaseGenerateDropTagStatement struct {
 	Description string
 	Given       tag_drop.DropTagStatement
 	Expected    string
+}
+
+type TestCaseGenerateDeleteTagStatement[TVidType string | int64] struct {
+	Description   string
+	Given         tag_delete.DeleteTagStatement[TVidType]
+	Expected      string
+	IsErrExpected bool
 }
 
 func GetTestCasesForGenerateCreateTagStatement() []TestCaseGenerateCreateTagStatement {
@@ -101,6 +109,76 @@ func GetTestCasesForGenerateDropTagStatement() []TestCaseGenerateDropTagStatemen
 			Description: "A simple drop tag statement with IfExists",
 			Given:       tag_drop.NewDropTagStatement("account", tag_drop.WithIfExists(true)),
 			Expected:    `DROP TAG IF EXISTS account;`,
+		},
+	}
+}
+
+func GetTestCasesForGenerateDeleteTagStatementWhereVidString() []TestCaseGenerateDeleteTagStatement[string] {
+	return []TestCaseGenerateDeleteTagStatement[string]{
+		{
+			Description:   "",
+			Given:         tag_delete.NewDeleteTagStatement[string]([]string{"tag1", "tag2"}, []string{"vid1", "vid2"}),
+			Expected:      `DELETE TAG tag1,tag2 FROM "vid1","vid2";`,
+			IsErrExpected: false,
+		},
+		{
+			Description:   "",
+			Given:         tag_delete.NewDeleteTagStatement[string]([]string{"tag1"}, []string{"vid1"}),
+			Expected:      `DELETE TAG tag1 FROM "vid1";`,
+			IsErrExpected: false,
+		},
+		{
+			Description:   "",
+			Given:         tag_delete.NewDeleteTagStatement[string]([]string{}, []string{"vid1"}, tag_delete.WithAllTags[string]()),
+			Expected:      `DELETE TAG * FROM "vid1";`,
+			IsErrExpected: false,
+		},
+		{
+			Description:   "vidList not specified",
+			Given:         tag_delete.NewDeleteTagStatement[string]([]string{"tag1"}, []string{}),
+			Expected:      "",
+			IsErrExpected: true,
+		},
+		{
+			Description:   "tagList and WithAllTags are mutually exclusive, cannot be used together",
+			Given:         tag_delete.NewDeleteTagStatement[string]([]string{"tag1"}, []string{"vid1"}, tag_delete.WithAllTags[string]()),
+			Expected:      "",
+			IsErrExpected: true,
+		},
+	}
+}
+
+func GetTestCasesForGenerateDeleteTagStatementWhereVidInt64() []TestCaseGenerateDeleteTagStatement[int64] {
+	return []TestCaseGenerateDeleteTagStatement[int64]{
+		{
+			Description:   "",
+			Given:         tag_delete.NewDeleteTagStatement[int64]([]string{"tag1", "tag2"}, []int64{100, 200}),
+			Expected:      `DELETE TAG tag1,tag2 FROM 100,200;`,
+			IsErrExpected: false,
+		},
+		{
+			Description:   "",
+			Given:         tag_delete.NewDeleteTagStatement[int64]([]string{"tag1"}, []int64{100}),
+			Expected:      `DELETE TAG tag1 FROM 100;`,
+			IsErrExpected: false,
+		},
+		{
+			Description:   "",
+			Given:         tag_delete.NewDeleteTagStatement[int64]([]string{}, []int64{100}, tag_delete.WithAllTags[int64]()),
+			Expected:      `DELETE TAG * FROM 100;`,
+			IsErrExpected: false,
+		},
+		{
+			Description:   "vidList not specified",
+			Given:         tag_delete.NewDeleteTagStatement[int64]([]string{"tag1"}, []int64{}),
+			Expected:      "",
+			IsErrExpected: true,
+		},
+		{
+			Description:   "tagList and WithAllTags are mutually exclusive, cannot be used together",
+			Given:         tag_delete.NewDeleteTagStatement[int64]([]string{"tag1"}, []int64{100}, tag_delete.WithAllTags[int64]()),
+			Expected:      "",
+			IsErrExpected: true,
 		},
 	}
 }
