@@ -152,19 +152,15 @@ generate-from-contracts:
 #######  BEGIN: MOCK GENERATION PART
 ########################################################################
 
-.PHONY: install-mockery
-install-mockery:
-		GOBIN=$(go env GOPATH)/bin go install github.com/vektra/mockery/v2@latest
-
 # Generate mocks for all interfaces
 .PHONY: generate-mocks
 generate-mocks:
-		$(go env GOPATH)/bin/mockery --all --recursive --output=./mocks --case=underscore
+		@mockery --all --recursive --output=./mocks --case=underscore
 
 # Generate mock for specific interface thrift.TTransport
 .PHONY: generate-mock-thrift-transport
-generate-mock-thrift-transport: install-mockery
-		$(go env GOPATH)/bin/mockery --name=TTransport --dir=$(go env GOPATH)/pkg/mod/github.com/apache/thrift@v0.21.0/lib/go/thrift --output=./mocks --case=underscore
+generate-mock-thrift-transport:
+		@mockery --name=TTransport --dir=$(go env GOPATH)/pkg/mod/github.com/apache/thrift@v0.21.0/lib/go/thrift --output=./mocks --case=underscore
 
 # Clean generated mocks
 .PHONY: clean-mocks
