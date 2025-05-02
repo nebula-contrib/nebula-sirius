@@ -150,7 +150,7 @@ func (f *NebulaClientFactory) ActivateObject(ctx context.Context, object *pool.P
 			f.log.Error(fmt.Sprintf("[%s] - %v", client.GetClientName(), err))
 			return err
 		}
-		f.log.Debug(fmt.Sprintf("[%s] - client is opened transport, activated succesfully", client.GetClientName()))
+		f.log.Debug(fmt.Sprintf("[%s] - client is opened transport, activated successfully", client.GetClientName()))
 	}
 
 	return client.verifyClientVersion(ctx)
