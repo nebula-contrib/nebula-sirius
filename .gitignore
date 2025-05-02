@@ -28,3 +28,4 @@ go.work.sum
 nebulagraph-light-deployment/data/*
 
 schema-scripts
+mocks/*
