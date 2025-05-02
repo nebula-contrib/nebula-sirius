@@ -26,6 +26,6 @@ func GenerateTTlDefinitionStatement(ttl TTLDefinition) (string, error) {
 	if ttl.ttlCol == "" {
 		return "", fmt.Errorf("TTL column name is required")
 	}
-	
+
 	return fmt.Sprintf(`TTL_DURATION = %d, TTL_COL = "%s"`, ttl.ttlDuration, ttl.ttlCol), nil
 }

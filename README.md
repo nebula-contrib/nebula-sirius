@@ -11,12 +11,9 @@
 [//]: # ([![Github Last Commit]&#40;https://img.shields.io/github/last-commit/nebula-contrib/nebula-sirius?color=61dfc6&label=last%20commit&#41;]&#40;&#41;)
 [//]: # (![GitHub all releases]&#40;https://img.shields.io/github/downloads/nebula-contrib/nebula-sirius/total&#41;)
 
-
-
-**What is nebula-sirius?**
-----------------------------
-
 _**nebula-sirius**_ is a Go library that provides a simple and efficient way to interact with the Nebula Graph database. It allows you to connect to Nebula Graph, execute queries, and retrieve results.
+
+- - -
 
 **Why do we need nebula-sirius?**
 --------------------------------------
